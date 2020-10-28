@@ -1,3 +1,5 @@
+const uuid = require("uuid");
+
 function newHealthCertificate({ type, status, lotNumber, result }) {
   console.log("Create", type, status, lotNumber, result);
   const today = new Date();
@@ -9,6 +11,7 @@ function newHealthCertificate({ type, status, lotNumber, result }) {
   }
   vc.credentialSubject.resourceType = type;
   vc.credentialSubject.status = status;
+  vc.credentialSubject.id = uuid.v4();
   if (type == "Immunization") {
     vc.credentialSubject.lotNumber = lotNumber;
     vc.credentialSubject.date = today.toISOString();

@@ -59,11 +59,14 @@ At least one photo is required. To add more photos, add as many `--photos <fileN
 Calling `node index.js vc patient` several times for the same file will add more patients, but won't be referenced anywhere else within the document. Future versions might handle this behaviour properly.
 
 
-3.3. Add practitioner data and sign
+3.3. Add practitioner data
 
-`node index.js vc sign --signingKeyName keyName --givenName PractitionerFirst --familyName PractitionerLast --prefix Dr. --issuer certificate.cert immunization.json`
+`node index.js vc practitioner --givenName PractitionerFirst --familyName PractitionerLast --prefix Dr. immunization.json`
 
+3.4. Sign
+
+`node index.js vc sign --issuer certificate.cert immunization.json`
 
 4. (Optional): Validate signature with X509 certificate file public key
 
-`node index.js vc validate --issuer certificate.cert immunization.json`
+`node index.js vc validate immunization.json`

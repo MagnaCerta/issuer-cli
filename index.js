@@ -7,6 +7,7 @@ const preprocess = require("./preprocess");
 const cli = new Command();
 cli.version("0.0.1");
 
+/*
 // Key creation
 cli
   .command("keypair <name>")
@@ -33,6 +34,7 @@ cli
   .description("Create certificate from CSR")
   .requiredOption("--csrFile <file>", "Certification request input")
   .action(csr.sign);
+*/
 
 // Verifiable credentials
 const vcCommand = cli
@@ -65,17 +67,20 @@ vcCommand
   .action(vc.addPatient);
 
 vcCommand
-  .command("sign <healthCertFile>")
-  .requiredOption("--signingKeyName <keyName>", "Key to sign with")
-  .requiredOption("--givenName <givenName>", "Patient first name")
-  .requiredOption("--familyName <familyName>", "Patient last name")
+  .command("practitioner <healthCertFile>")
+  .requiredOption("--givenName <givenName>", "Practitioner first name")
+  .requiredOption("--familyName <familyName>", "Practitioner last name")
   .option("--prefix <prefix>", "Practitioner prefix (eg. Dr., Mrs.)")
+  .action(vc.addPractitioner);
+
+vcCommand
+  .command("sign <healthCertFile>")
   .requiredOption("--issuer <certFile>", "Sign using existing Certificate")
   .action(vc.sign);
 
 vcCommand
   .command("validate <healthCertFile>")
-  .option("--issuer <certFile>", "Certificate to validate with")
+  // .option("--issuer <certFile>", "Certificate to validate with")
   .action(vc.validate);
 
 cli.parseAsync(process.argv).catch(console.log);
