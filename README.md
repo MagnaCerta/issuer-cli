@@ -6,7 +6,7 @@ iCerta signed with a (X509) Certificate key.
 
 ```
 Commands:
-  keypair|key <id>                               Create public and private signing key pair
+  keypair|key [options] <name>                   Create public and private signing key pair
   certification-request|csr [options] <csrFile>  Create CSR
   certificate|cert [options] <certFile>          Create certificate from CSR
   vc                                             Manage Health Certificates (verifiable credentials)
@@ -21,23 +21,23 @@ Commands:
 `npm install`
 
 
-1. Create a RSA key pair
+1. Create a ECDSA key pair
 
-`node index.js keypair keyName`
+`node index.js keypair --orgId organizationId keyName`
 
-creates a RSA key pair (private.pem, public.pem) under the folder `keys/keyName`.
+creates a ECDSA key pair and stores public key as `${keyName}.pem`.
 
 
 2. Create a X509 certificate
 
 2.1. Create Certification Request (CSR)
 
-`node index.js csr --keynName keyName --cn 'Practitioner Name' --org 'Organization Name' --country US --email practitioner@lab.organization.com csrFile.csr`
+`node index.js csr --orgId organizationId --cn 'Practitioner Name' --org 'Organization Name' --country US --email practitioner@lab.organization.com csrFile.csr`
 
 
 2.2. Create Certificate from CSR
 
-`node index.js cert --csrFile csrFile.csr certificate.cert`
+`node index.js cert --csrFile csrFile.csr --orgId organizationId certificate.cert`
 
 
 3. Create Health certificate (VC: Verifiable credential)
