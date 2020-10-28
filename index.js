@@ -22,20 +22,19 @@ cli
   .description("Create CSR")
   .requiredOption("--orgId <orgId>", "Organization ID")
   .requiredOption("--cn <commonName>", "Common Name")
-  .requiredOption("--org <organization>", "Organization")
+  .requiredOption("--org <organization>", "Organization Name")
   .requiredOption("--country <country>", "Country")
   .requiredOption("--email <email>", "E-mail", preprocess.concat, [])
   .action(csr.create);
 
-/*
 // Certificates (X509)
 cli
   .command("certificate <certFile>")
   .alias("cert")
   .description("Create certificate from CSR")
   .requiredOption("--csrFile <file>", "Certification request input")
+  .requiredOption("--orgId <orgId>", "Organization ID")
   .action(csr.sign);
-*/
 
 // Verifiable credentials
 const vcCommand = cli

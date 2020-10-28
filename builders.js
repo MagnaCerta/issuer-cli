@@ -1,5 +1,6 @@
 const { createCredentialDigest } = require("./digest");
 const { customLoader } = require("./documentloaders");
+const { PARENT_ORG_ID } = require("./constants");
 
 function buildCreateKeyRequest(org_id) {
   return {
@@ -7,10 +8,10 @@ function buildCreateKeyRequest(org_id) {
       algorithm: 2, // ECDSA
       options: {
         Curve: "SECP256R1",
-        Hash: "SHA256"
-      }
+        Hash: "SHA256",
+      },
     },
-    org_id
+    org_id,
   };
 }
 
@@ -26,31 +27,30 @@ function buildCreateCSRRequest(
     common_name,
     country,
     organization,
-    subject_alt_name: { emails }
+    subject_alt_name: { emails },
   };
 }
 
-function buildSignDigitalpenRequest(csrpem, orgName) {
+function buildSignCSRRequest(csr_pem, org_id) {
   const expirationDate = new Date();
   expirationDate.setDate(expirationDate.getDate() + 30); // 30-day validity
-  const built = {
-    csr_pem: csrpem,
-    organization: orgName,
+  return {
+    csr_pem,
+    org_id,
+    parent_org_id: PARENT_ORG_ID,
     expires_at: expirationDate.toISOString(),
     key_usage: {
-      digital_signature: true,
+      digital_signature: true
     },
     basic_constraints: {
       critical: true,
       is_ca: false,
       path_len_constraint: {
         is_set: false,
-        len: 0,
-      },
-    },
+        len: 0
+      }
+    }
   };
-
-  return built;
 }
 
 async function buildIssuecertaRequest(vc, serialNumber) {
@@ -66,7 +66,7 @@ async function buildIssuecertaRequest(vc, serialNumber) {
     certa_id,
     digitalpen_id: serialNumber,
     types: vc.type,
-    digest,
+    digest
   };
 
   return built;
@@ -86,7 +86,7 @@ async function buildVerifycertaRequest(vc) {
   const built = {
     certa_id,
     digest,
-    proof,
+    proof
   };
 
   return built;
@@ -98,7 +98,7 @@ function proofFromResponse(proof) {
     type: proof.type,
     jws: proof.jws,
     proofPurpose: proof.proof_purpose,
-    verificationMethod: proof.verification_method,
+    verificationMethod: proof.verification_method
   };
 }
 
@@ -108,16 +108,16 @@ function proof2Request(proof) {
     type: proof.type,
     jws: proof.jws,
     proof_purpose: proof.proofPurpose,
-    verification_method: proof.verificationMethod,
+    verification_method: proof.verificationMethod
   };
 }
 
 module.exports = {
   buildCreateKeyRequest,
   buildCreateCSRRequest,
-  buildSignDigitalpenRequest,
+  buildSignCSRRequest,
   buildIssuecertaRequest,
   buildVerifycertaRequest,
   proofFromResponse,
-  proof2Request,
+  proof2Request
 };

@@ -69,7 +69,6 @@ async function sign(healthCertFile, { issuer }) {
     const vcStrOut = JSON.stringify(vc, null, 2);
     fs.writeFileSync(healthCertFile, vcStrOut);
   } catch (err) {
-    console.log(err.response);
     throw err.response.data;
   }
 }
@@ -91,7 +90,7 @@ async function validate(healthCertFile) {
     );
     console.log(verifyResponse.data);
   } catch (err) {
-    console.log(err.response.data);
+    throw err.response.data;
   }
 }
 

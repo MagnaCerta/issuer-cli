@@ -1,10 +1,7 @@
 const axios = require("axios");
 const fs = require("fs");
 const { API_BASE_URL } = require("./constants");
-const {
-  buildSignDigitalpenRequest,
-  buildCreateCSRRequest
-} = require("./builders");
+const { buildSignCSRRequest, buildCreateCSRRequest } = require("./builders");
 
 async function create(csrFile, { orgId, cn, country, org, email }) {
   const request = buildCreateCSRRequest(orgId, cn, country, org, email);
@@ -19,38 +16,23 @@ async function create(csrFile, { orgId, cn, country, org, email }) {
     fs.writeFileSync(csrFile, pem);
     console.log("SAVED", csrFile);
   } catch (err) {
-    console.log(err.response);
     throw err.response.data;
   }
 }
 
-async function sign(certFile, { csrFile }) {
+async function sign(certFile, { csrFile, orgId }) {
   try {
     const csrPem = fs.readFileSync(csrFile).toString("ascii");
-    // const csr = forge.pki.certificationRequestFromPem(csrPem);
-    const req = buildSignDigitalpenRequest(csrPem, ORG_NAME);
+    const req = buildSignCSRRequest(csrPem, orgId);
     // console.log(req);
-    const res = await axios.post(
-      `${API_BASE_URL}/certas/v1/signupDigitalpen`,
-      req
-    );
+    const res = await axios.post(`${API_BASE_URL}/certas/v1/signCSR`, req);
     var certPem = res.data.cert_pem;
     console.log("CERTIFICATE", certPem);
     fs.writeFileSync(certFile, certPem);
+    console.log("SAVED", certFile);
   } catch (err) {
-    console.log(err.response);
     throw err.response.data;
   }
 }
 
-function compareKeys(k1, k2) {
-  const n1 = k1.n;
-  const n2 = k2.n;
-  const nEq = n1.toString() === n2.toString();
-  const e1 = k1.e;
-  const e2 = k2.e;
-  const eEq = e1.toString() === e2.toString();
-  return nEq && eEq;
-}
-
-module.exports = { create, sign, compareKeys };
+module.exports = { create, sign };

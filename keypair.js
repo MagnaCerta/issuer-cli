@@ -28,4 +28,4 @@ async function create(keyName, { orgId }) {
   }
 }
 
-module.exports = { create, save, load };
+module.exports = { create };
