@@ -1,17 +1,15 @@
 const fs = require("fs");
-const axios = require("axios");
-const forge = require("node-forge");
 const { createCanvas, loadImage } = require("canvas");
-const { API_BASE_URL } = require("./constants");
+const { callService } = require("./client");
 const {
   newHealthCertificate,
   addPatientData,
-  addPractitionerData
+  addPractitionerData,
 } = require("./healthCertificate");
 const {
   buildIssuecertaRequest,
   buildVerifycertaRequest,
-  proofFromResponse
+  proofFromResponse,
 } = require("./builders");
 const { parseCertificatePem, getCertificateSerialNbr } = require("./parsers");
 
@@ -43,7 +41,7 @@ async function addPractitioner(healthCertFile, { ...practitionerData }) {
   fs.writeFileSync(healthCertFile, vcStrOut);
 }
 
-async function sign(healthCertFile, { issuer }) {
+async function sign(healthCertFile, { issuer, ...credentials }) {
   const vcStrIn = fs.readFileSync(healthCertFile);
   const vc = JSON.parse(vcStrIn);
   if (vc.proof) {
@@ -60,9 +58,10 @@ async function sign(healthCertFile, { issuer }) {
   // console.log("Request", signRequest);
 
   try {
-    const signResponse = await axios.post(
-      `${API_BASE_URL}/certas/v1/issueCerta`,
-      signRequest
+    const signResponse = await callService(
+      "/certas/v1/issueCerta",
+      signRequest,
+      credentials
     );
     vc.proof = proofFromResponse(signResponse.data.proof);
 
@@ -73,7 +72,7 @@ async function sign(healthCertFile, { issuer }) {
   }
 }
 
-async function validate(healthCertFile) {
+async function validate(healthCertFile, credentials) {
   const vcStrIn = fs.readFileSync(healthCertFile);
   const vc = JSON.parse(vcStrIn);
   if (!vc.proof) {
@@ -84,12 +83,14 @@ async function validate(healthCertFile) {
   // console.log("Request", verifyRequest);
 
   try {
-    const verifyResponse = await axios.post(
-      `${API_BASE_URL}/certas/v1/validateCerta`,
-      verifyRequest
+    const verifyResponse = await callService(
+      "/certas/v1/validateCerta",
+      verifyRequest,
+      credentials
     );
     console.log(verifyResponse.data);
   } catch (err) {
+    console.log(err);
     throw err.response.data;
   }
 }
