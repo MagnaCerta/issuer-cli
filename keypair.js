@@ -18,23 +18,14 @@ async function create(keyName, { orgId }) {
       key
     );
 
-    const keyPem = publicKeyResponse.data.public_key_pem;
-    save(keyName, keyPem);
+    const publicKeyPem = publicKeyResponse.data.public_key_pem;
+    const keyFile = `${keyName}.pem`;
+    fs.writeFileSync(keyFile, publicKeyPem);
+    console.log("SAVED", keyFile);
   } catch (err) {
     console.log(err.response);
     throw err.response.data;
   }
-}
-
-function save(keyName, publicKeyPem) {
-  fs.writeFileSync(`${keyName}.pem`, publicKeyPem);
-}
-
-function load(keyName) {
-  const publicKeyPem = fs.readFileSync(`${keyName}.pem`);
-  return { publicKeyPem };
-  // const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
-  // return { publicKey, publicKeyPem };
 }
 
 module.exports = { create, save, load };

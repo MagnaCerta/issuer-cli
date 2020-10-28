@@ -1,61 +1,27 @@
 const axios = require("axios");
 const fs = require("fs");
-const forge = require("node-forge");
-const { load } = require("./keypair");
-const { buildSignDigitalpenRequest } = require("./builders");
+const { API_BASE_URL } = require("./constants");
+const {
+  buildSignDigitalpenRequest,
+  buildCreateCSRRequest
+} = require("./builders");
 
-const ORG_NAME = "CLI Demo";
-const API_BASE_URL = "https://api.opencerta.org";
-// const API_BASE_URL = "http://localhost:11000";
+async function create(csrFile, { orgId, cn, country, org, email }) {
+  const request = buildCreateCSRRequest(orgId, cn, country, org, email);
 
-async function create(csrFile, cmd) {
-  const keyName = cmd.keyName;
-  const key = load(keyName);
-  const csr = forge.pki.createCertificationRequest();
-  csr.publicKey = key.publicKey;
-  csr.setSubject([
-    {
-      name: "commonName",
-      value: cmd.cn
-    },
-    {
-      name: "countryName",
-      value: cmd.country
-    },
-    {
-      name: "organizationName",
-      value: cmd.org
-    }
-  ]);
+  try {
+    const res = await axios.post(
+      `${API_BASE_URL}/certas/v1/createCSR`,
+      request
+    );
 
-  // Subject Alternative Names
-  const altNames = [
-    // 6: URI
-    { type: 6, value: ORG_NAME }
-  ];
-  if (cmd.email.length > 0) {
-    const emailsAltName = cmd.email.map((e) => {
-      return { type: 1, value: e };
-    });
-    altNames.push(...emailsAltName);
+    const pem = res.data.csr_pem;
+    fs.writeFileSync(csrFile, pem);
+    console.log("SAVED", csrFile);
+  } catch (err) {
+    console.log(err.response);
+    throw err.response.data;
   }
-  csr.setAttributes([
-    {
-      name: "extensionRequest",
-      extensions: [
-        {
-          name: "subjectAltName",
-          altNames: altNames
-        }
-      ]
-    }
-  ]);
-
-  csr.sign(key.privateKey, forge.md.sha256.create());
-  console.log("VALID CREATED CSR:", csr.verify());
-  var pem = forge.pki.certificationRequestToPem(csr);
-  fs.writeFileSync(csrFile, pem);
-  console.log("SAVED", csrFile);
 }
 
 async function sign(certFile, { csrFile }) {

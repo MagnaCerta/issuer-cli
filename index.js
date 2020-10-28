@@ -15,19 +15,19 @@ cli
   .requiredOption("--orgId <orgId>", "Organization ID")
   .action(keypair.create);
 
-/*
 // CSR (X509)
 cli
   .command("certification-request <csrFile>")
   .alias("csr")
   .description("Create CSR")
-  .requiredOption("--keyName <keyName>", "Key File")
+  .requiredOption("--orgId <orgId>", "Organization ID")
   .requiredOption("--cn <commonName>", "Common Name")
   .requiredOption("--org <organization>", "Organization")
   .requiredOption("--country <country>", "Country")
   .requiredOption("--email <email>", "E-mail", preprocess.concat, [])
   .action(csr.create);
 
+/*
 // Certificates (X509)
 cli
   .command("certificate <certFile>")
