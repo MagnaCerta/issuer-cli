@@ -4,7 +4,7 @@ const { Certificate } = require("pkijs");
 
 function parseCertificatePem(pem) {
   pem = pem.trim();
-  const sep = "\n";
+  let sep = "\n";
   if (pem.includes("\r\n")) {
     sep = "\r\n";
   }
