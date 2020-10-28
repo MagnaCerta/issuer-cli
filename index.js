@@ -7,14 +7,15 @@ const preprocess = require("./preprocess");
 const cli = new Command();
 cli.version("0.0.1");
 
-/*
 // Key creation
 cli
   .command("keypair <name>")
   .alias("key")
   .description("Create public and private signing key pair")
+  .requiredOption("--orgId <orgId>", "Organization ID")
   .action(keypair.create);
 
+/*
 // CSR (X509)
 cli
   .command("certification-request <csrFile>")

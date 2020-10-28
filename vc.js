@@ -2,20 +2,18 @@ const fs = require("fs");
 const axios = require("axios");
 const forge = require("node-forge");
 const { createCanvas, loadImage } = require("canvas");
+const { API_BASE_URL } = require("./constants");
 const {
   newHealthCertificate,
   addPatientData,
-  addPractitionerData,
+  addPractitionerData
 } = require("./healthCertificate");
 const {
   buildIssuecertaRequest,
   buildVerifycertaRequest,
-  proofFromResponse,
+  proofFromResponse
 } = require("./builders");
 const { parseCertificatePem, getCertificateSerialNbr } = require("./parsers");
-
-// const API_BASE_URL = "https://api.magnacerta.com";
-const API_BASE_URL = "http://localhost:11000";
 
 async function create(healthCertFile, opts) {
   // console.log(opts);

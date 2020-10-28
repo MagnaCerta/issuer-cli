@@ -1,43 +1,40 @@
 const fs = require("fs");
-const bs58 = require("bs58");
-const forge = require("node-forge");
-const { RSAKeyPair } = require("jsonld-signatures");
+const axios = require("axios");
+const { buildCreateKeyRequest } = require("./builders");
+const { API_BASE_URL } = require("./constants");
 
-async function create(keyName) {
-  const rsa = await RSAKeyPair.generate();
-  const key = {
-    privateKeyPem: rsa.privateKeyPem,
-    publicKeyPem: rsa.publicKeyPem,
-  };
-  save(key, keyName);
+async function create(keyName, { orgId }) {
+  const keyRequest = buildCreateKeyRequest(orgId);
+
+  try {
+    const keyResponse = await axios.post(
+      `${API_BASE_URL}/certas/v1/createPrivateKey`,
+      keyRequest
+    );
+
+    const key = keyResponse.data;
+    const publicKeyResponse = await axios.post(
+      `${API_BASE_URL}/certas/v1/getPublicKey`,
+      key
+    );
+
+    const keyPem = publicKeyResponse.data.public_key_pem;
+    save(keyName, keyPem);
+  } catch (err) {
+    console.log(err.response);
+    throw err.response.data;
+  }
 }
 
-function b58topem(b58key, type) {
-  const decoded = bs58.decode(b58key);
-  return buffer2Keytype(decoded, type);
-}
-
-function buffer2Pemtype(buf, type) {
-  const header = `-----BEGIN ${type.toUpperCase()} KEY-----\n`;
-  const footer = `\n-----END ${type.toUpperCase()} KEY-----\n`;
-  const keyB64 = decoded.toString("base64");
-  return header + keyB64 + footer;
-}
-
-function save(key, keyName) {
-  const keyDir = "./keys/" + keyName;
-  fs.mkdirSync(keyDir, { recursive: true });
-  fs.writeFileSync(keyDir + "/private.pem", key.privateKeyPem);
-  fs.writeFileSync(keyDir + "/public.pem", key.publicKeyPem);
+function save(keyName, publicKeyPem) {
+  fs.writeFileSync(`${keyName}.pem`, publicKeyPem);
 }
 
 function load(keyName) {
-  const keyDir = "./keys/" + keyName;
-  const publicKeyPem = fs.readFileSync(keyDir + "/public.pem");
-  const privateKeyPem = fs.readFileSync(keyDir + "/private.pem");
-  const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
-  const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
-  return { publicKey, privateKey, publicKeyPem, privateKeyPem };
+  const publicKeyPem = fs.readFileSync(`${keyName}.pem`);
+  return { publicKeyPem };
+  // const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+  // return { publicKey, publicKeyPem };
 }
 
-module.exports = { create, buffer2Pemtype, b58topem, save, load };
+module.exports = { create, save, load };
