@@ -4,12 +4,12 @@ const { callService } = require("./client");
 const {
   newHealthCertificate,
   addPatientData,
-  addPractitionerData
+  addPractitionerData,
 } = require("./healthCertificate");
 const {
   buildIssuecertaRequest,
   buildVerifycertaRequest,
-  proofFromResponse
+  proofFromResponse,
 } = require("./builders");
 const { parseCertificatePem, getCertificateSerialNbr } = require("./parsers");
 
@@ -41,16 +41,25 @@ async function addPractitioner(healthCertFile, { ...practitionerData }) {
   fs.writeFileSync(healthCertFile, vcStrOut);
 }
 
-async function sign(healthCertFile, { issuer, ...credentials }) {
+async function sign(healthCertFile, { issuer, digitalpenId, ...credentials }) {
   const vcStrIn = fs.readFileSync(healthCertFile);
   const vc = JSON.parse(vcStrIn);
   if (vc.proof) {
     throw new Error("Health certificate has been already signed");
   }
 
-  const certPem = fs.readFileSync(issuer).toString();
-  const cert = parseCertificatePem(certPem);
-  const serialNbr = getCertificateSerialNbr(cert);
+  if (!issuer && !digitalpenId) {
+    throw "One of {issuer, digitalpenId} is expected";
+  }
+
+  let serialNbr;
+  if (digitalpenId) {
+    serialNbr = digitalpenId;
+  } else {
+    const certPem = fs.readFileSync(issuer).toString();
+    const cert = parseCertificatePem(certPem);
+    serialNbr = getCertificateSerialNbr(cert);
+  }
   vc.issuanceDate = new Date().toISOString();
 
   // Do not modify vc beyond this point, otherwise its digest will be different when trying to verify

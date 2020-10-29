@@ -66,6 +66,12 @@ Calling `node index.js vc patient` several times for the same file will add more
 
 3.4. Sign
 
+Using digital pen Id (certificate serial number)
+
+`node index.js vc sign --digitalpenId digitalpenId --username username --password password immunization.json`
+
+Alternatively, if you have the digital pen (PEM certificate) file:
+
 `node index.js vc sign --issuer certificate.cert --username username --password password immunization.json`
 
 4. (Optional): Validate signature with X509 certificate file public key

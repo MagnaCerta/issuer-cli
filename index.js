@@ -84,7 +84,8 @@ vcCommand
 
 vcCommand
   .command("sign <healthCertFile>")
-  .requiredOption("--issuer <certFile>", "Sign using existing Certificate")
+  .option("--issuer <certFile>", "Sign using existing Certificate")
+  .option("--digitalpenId <digitalpenId>", "Digital pen serial number")
   .option("--token <token>", "API TOKEN")
   .option("--username <username>", "Practitioner first name")
   .option("--password <password>", "Practitioner last name")
