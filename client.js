@@ -37,11 +37,18 @@ async function callService(path, request, credentials) {
   }
 
   try {
-    return axios.post(API_BASE_URL + path, request, requestOpts);
+    const response = await axios.post(
+      API_BASE_URL + path,
+      request,
+      requestOpts
+    );
+    return response.data;
   } catch (err) {
     if (err.response) {
       throw err.response.data;
-    } else throw err;
+    } else {
+      throw err;
+    }
   }
 }
 

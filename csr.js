@@ -10,7 +10,7 @@ async function create(
 
   try {
     const res = await callService("/certas/v1/createCSR", request, credentials);
-    const pem = res.data.csr_pem;
+    const pem = res.csr_pem;
     fs.writeFileSync(csrFile, pem);
     console.log("SAVED", csrFile);
   } catch (err) {
@@ -24,7 +24,7 @@ async function sign(certFile, { csrFile, orgId, ...credentials }) {
     const request = buildSignCSRRequest(csrPem, orgId);
     // console.log(req);
     const res = await callService("/certas/v1/signCSR", request, credentials);
-    var certPem = res.data.cert_pem;
+    var certPem = res.cert_pem;
     console.log("CERTIFICATE", certPem);
     fs.writeFileSync(certFile, certPem);
     console.log("SAVED", certFile);

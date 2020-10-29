@@ -4,12 +4,12 @@ const { callService } = require("./client");
 const {
   newHealthCertificate,
   addPatientData,
-  addPractitionerData,
+  addPractitionerData
 } = require("./healthCertificate");
 const {
   buildIssuecertaRequest,
   buildVerifycertaRequest,
-  proofFromResponse,
+  proofFromResponse
 } = require("./builders");
 const { parseCertificatePem, getCertificateSerialNbr } = require("./parsers");
 
@@ -63,7 +63,7 @@ async function sign(healthCertFile, { issuer, ...credentials }) {
       signRequest,
       credentials
     );
-    vc.proof = proofFromResponse(signResponse.data.proof);
+    vc.proof = proofFromResponse(signResponse.proof);
 
     const vcStrOut = JSON.stringify(vc, null, 2);
     fs.writeFileSync(healthCertFile, vcStrOut);
@@ -88,7 +88,7 @@ async function validate(healthCertFile, credentials) {
       verifyRequest,
       credentials
     );
-    console.log(verifyResponse.data);
+    console.log(verifyResponse);
   } catch (err) {
     throw err;
   }
