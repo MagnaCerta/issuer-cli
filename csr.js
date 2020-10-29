@@ -1,17 +1,15 @@
-const axios = require("axios");
 const fs = require("fs");
-const { API_BASE_URL } = require("./constants");
 const { buildSignCSRRequest, buildCreateCSRRequest } = require("./builders");
+const { callService } = require("./client");
 
-async function create(csrFile, { orgId, cn, country, org, email }) {
+async function create(
+  csrFile,
+  { orgId, cn, country, org, email, ...credentials }
+) {
   const request = buildCreateCSRRequest(orgId, cn, country, org, email);
 
   try {
-    const res = await axios.post(
-      `${API_BASE_URL}/certas/v1/createCSR`,
-      request
-    );
-
+    const res = await callService("/certas/v1/createCSR", request, credentials);
     const pem = res.data.csr_pem;
     fs.writeFileSync(csrFile, pem);
     console.log("SAVED", csrFile);
@@ -20,12 +18,12 @@ async function create(csrFile, { orgId, cn, country, org, email }) {
   }
 }
 
-async function sign(certFile, { csrFile, orgId }) {
+async function sign(certFile, { csrFile, orgId, ...credentials }) {
   try {
     const csrPem = fs.readFileSync(csrFile).toString("ascii");
-    const req = buildSignCSRRequest(csrPem, orgId);
+    const request = buildSignCSRRequest(csrPem, orgId);
     // console.log(req);
-    const res = await axios.post(`${API_BASE_URL}/certas/v1/signCSR`, req);
+    const res = await callService("/certas/v1/signCSR", request, credentials);
     var certPem = res.data.cert_pem;
     console.log("CERTIFICATE", certPem);
     fs.writeFileSync(certFile, certPem);

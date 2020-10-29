@@ -8,7 +8,7 @@ async function getToken(username, password) {
     scope: "openid",
     client_id: "digital-pen-app",
     username,
-    password,
+    password
   };
 
   try {
@@ -19,7 +19,6 @@ async function getToken(username, password) {
         return token;
       });
   } catch (err) {
-    console.log(err);
     throw err.response.data;
   }
 }
@@ -31,7 +30,7 @@ async function callService(path, request, credentials) {
     if (token || (username && password)) {
       const authToken = token || (await getToken(username, password));
       requestOpts.headers = { Authorization: "Bearer " + authToken };
-      console.log(requestOpts);
+      // console.log(requestOpts);
     }
   }
 
