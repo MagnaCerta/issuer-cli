@@ -13,6 +13,9 @@ cli
   .alias("key")
   .description("Create public and private signing key pair")
   .requiredOption("--orgId <orgId>", "Organization ID")
+  .option("--token <token>", "API TOKEN")
+  .option("--username <username>", "Practitioner first name")
+  .option("--password <password>", "Practitioner last name")
   .action(keypair.create);
 
 // CSR (X509)
@@ -25,6 +28,9 @@ cli
   .requiredOption("--org <organization>", "Organization Name")
   .requiredOption("--country <country>", "Country")
   .requiredOption("--email <email>", "E-mail", preprocess.concat, [])
+  .option("--token <token>", "API TOKEN")
+  .option("--username <username>", "Practitioner first name")
+  .option("--password <password>", "Practitioner last name")
   .action(csr.create);
 
 // Certificates (X509)
@@ -34,6 +40,9 @@ cli
   .description("Create certificate from CSR")
   .requiredOption("--csrFile <file>", "Certification request input")
   .requiredOption("--orgId <orgId>", "Organization ID")
+  .option("--token <token>", "API TOKEN")
+  .option("--username <username>", "Practitioner first name")
+  .option("--password <password>", "Practitioner last name")
   .action(csr.sign);
 
 // Verifiable credentials
@@ -76,11 +85,16 @@ vcCommand
 vcCommand
   .command("sign <healthCertFile>")
   .requiredOption("--issuer <certFile>", "Sign using existing Certificate")
+  .option("--token <token>", "API TOKEN")
+  .option("--username <username>", "Practitioner first name")
+  .option("--password <password>", "Practitioner last name")
   .action(vc.sign);
 
 vcCommand
   .command("validate <healthCertFile>")
-  // .option("--issuer <certFile>", "Certificate to validate with")
+  .option("--token <token>", "API TOKEN")
+  .option("--username <username>", "Practitioner first name")
+  .option("--password <password>", "Practitioner last name")
   .action(vc.validate);
 
 cli.parseAsync(process.argv).catch(console.log);

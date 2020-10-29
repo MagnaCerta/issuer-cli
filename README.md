@@ -15,6 +15,7 @@ Commands:
 
 ## Example
 
+Mostly all calls require authentication, that's why you'll need to provide your credentials using `--user username --pwd password`. Alternatively, if you already have a token, you can replace `--user username --pwd password` by `--token apiToken`.
 
 0. Setup: Install required packages
 
@@ -23,7 +24,7 @@ Commands:
 
 1. Create a ECDSA key pair
 
-`node index.js keypair --orgId organizationId keyName`
+`node index.js keypair --orgId organizationId --username username --password password keyName`
 
 creates a ECDSA key pair and stores public key as `${keyName}.pem`.
 
@@ -32,12 +33,12 @@ creates a ECDSA key pair and stores public key as `${keyName}.pem`.
 
 2.1. Create Certification Request (CSR)
 
-`node index.js csr --orgId organizationId --cn 'Practitioner Name' --org 'Organization Name' --country US --email practitioner@lab.organization.com csrFile.csr`
+`node index.js csr --orgId organizationId --cn 'Practitioner Name' --org 'Organization Name' --country US --email practitioner@lab.organization.com --username username --password password csrFile.csr`
 
 
 2.2. Create Certificate from CSR
 
-`node index.js cert --csrFile csrFile.csr --orgId organizationId certificate.cert`
+`node index.js cert --csrFile csrFile.csr --orgId organizationId --username username --password password certificate.cert`
 
 
 3. Create Health certificate (VC: Verifiable credential)
@@ -65,8 +66,8 @@ Calling `node index.js vc patient` several times for the same file will add more
 
 3.4. Sign
 
-`node index.js vc sign --issuer certificate.cert immunization.json`
+`node index.js vc sign --issuer certificate.cert --username username --password password immunization.json`
 
 4. (Optional): Validate signature with X509 certificate file public key
 
-`node index.js vc validate immunization.json`
+`node index.js vc validate --username username --password password immunization.json`
