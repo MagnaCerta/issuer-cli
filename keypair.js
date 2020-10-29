@@ -24,8 +24,7 @@ async function create(keyName, { orgId, ...credentials }) {
     fs.writeFileSync(keyFile, publicKeyPem);
     console.log("SAVED", keyFile);
   } catch (err) {
-    console.log(err.response);
-    throw err.response.data;
+    throw err;
   }
 }
 

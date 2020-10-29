@@ -14,7 +14,7 @@ async function create(
     fs.writeFileSync(csrFile, pem);
     console.log("SAVED", csrFile);
   } catch (err) {
-    throw err.response.data;
+    throw err;
   }
 }
 
@@ -29,7 +29,7 @@ async function sign(certFile, { csrFile, orgId, ...credentials }) {
     fs.writeFileSync(certFile, certPem);
     console.log("SAVED", certFile);
   } catch (err) {
-    throw err.response.data;
+    throw err;
   }
 }
 

@@ -19,7 +19,9 @@ async function getToken(username, password) {
         return token;
       });
   } catch (err) {
-    throw err.response.data;
+    if (err.response) {
+      throw err.response.data;
+    } else throw err;
   }
 }
 
@@ -34,7 +36,13 @@ async function callService(path, request, credentials) {
     }
   }
 
-  return axios.post(API_BASE_URL + path, request, requestOpts);
+  try {
+    return axios.post(API_BASE_URL + path, request, requestOpts);
+  } catch (err) {
+    if (err.response) {
+      throw err.response.data;
+    } else throw err;
+  }
 }
 
 module.exports = { getToken, callService };
