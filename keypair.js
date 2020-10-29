@@ -1,21 +1,22 @@
 const fs = require("fs");
-const axios = require("axios");
 const { buildCreateKeyRequest } = require("./builders");
-const { API_BASE_URL } = require("./constants");
+const { callService } = require("./client");
 
-async function create(keyName, { orgId }) {
+async function create(keyName, { orgId, ...credentials }) {
   const keyRequest = buildCreateKeyRequest(orgId);
 
   try {
-    const keyResponse = await axios.post(
-      `${API_BASE_URL}/certas/v1/createPrivateKey`,
-      keyRequest
+    const keyResponse = await callService(
+      "/certas/v1/createPrivateKey",
+      keyRequest,
+      credentials
     );
 
     const key = keyResponse.data;
-    const publicKeyResponse = await axios.post(
-      `${API_BASE_URL}/certas/v1/getPublicKey`,
-      key
+    const publicKeyResponse = await callService(
+      "/certas/v1/getPublicKey",
+      key,
+      credentials
     );
 
     const publicKeyPem = publicKeyResponse.data.public_key_pem;
