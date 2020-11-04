@@ -1,5 +1,12 @@
 const uuid = require("uuid");
 
+const SUBJECT_INFO_URL =
+  "http://commonpass.org/fhir/StructureDefinition/subject-info";
+const SUBJECT_NAME_INFO_URL =
+  "http://commonpass.org/fhir/StructureDefinition/subject-name-info";
+const SUBJECT_PHOTO_URL =
+  "http://commonpass.org/fhir/StructureDefinition/subject-photo-info";
+
 function newHealthCertificate({ type, status, lotNumber, result }) {
   console.log("Create", type, status, lotNumber, result);
   const todayStr = new Date().toISOString();
@@ -31,22 +38,22 @@ function newHealthCertificate({ type, status, lotNumber, result }) {
           {
             system: "https://www.questd.com/codes",
             code: "KP615943B",
-            display: "Specimen collection",
-          },
+            display: "Specimen collection"
+          }
         ],
-        text: "Specimen collection",
+        text: "Specimen collection"
       },
       receivedTime: todayStr,
       collection: {
-        collectedDateTime: todayStr,
-      },
+        collectedDateTime: todayStr
+      }
     };
     vc.credentialSubject.contained.push(specimen);
     vc.credentialSubject.specimen = [
       {
         type: "Specimen",
-        reference: "#specimen1",
-      },
+        reference: "#specimen1"
+      }
     ];
     // Observation
     addResult_(vc.credentialSubject, result);
@@ -76,13 +83,13 @@ function addResult_(doc, resultStr) {
         {
           system: "https://www.questd.com/codes",
           code: "AZD1222",
-          display: "serology results",
-        },
+          display: "serology results"
+        }
       ],
-      text: "serology results",
+      text: "serology results"
     },
     valueString: resultStr,
-    comment: resultComment[resultStr],
+    comment: resultComment[resultStr]
   };
   doc.contained = doc.contained || [];
   doc.contained.push(observation);
@@ -90,7 +97,7 @@ function addResult_(doc, resultStr) {
     {
       type: "Observation",
       reference: "#r1"
-    },
+    }
   ];
 }
 
@@ -101,43 +108,89 @@ function addPatientData(
   if (photo.length == 0) {
     throw new Error("At least one photo must be provided");
   }
-  // Patient
-  const patient = {
-    resourceType: "≈",
-    id: "p1",
-    name: [{ family: familyName, given: [givenName] }],
-    photo: photo.map((p) => {
-      return { data: p };
-    }),
-  };
-  if (gender) {
-    patient.gender = gender;
+  const patientPhotos = photo.map((p) => {
+    return { data: p };
+  });
+
+  if (vc.type.includes("FHIRCredential")) {
+    const subjectExts = vc.credentialSubject.fhirSource.subject.extension;
+
+    // Find Subject_Info object
+    let subjectInfo;
+    const subjectInfoExt = subjectExts.find(
+      (ext) => ext.url === SUBJECT_INFO_URL
+    );
+    if (subjectInfoExt) {
+      subjectInfoExt.extension = subjectInfoExt.extension || [];
+      subjectInfo = subjectInfoExt.extension;
+    } else {
+      const newSubjectInfoExt = {
+        url: SUBJECT_INFO_URL,
+        extension: []
+      };
+      subjectExts.push(newSubjectInfoExt);
+      subjectInfo = newSubjectInfoExt.extension;
+    }
+
+    // Add Name_Info to Subject_Info
+    subjectInfo.push({
+      url: SUBJECT_NAME_INFO_URL,
+      valueHumanName: {
+        family: [familyName],
+        given: [givenName]
+      }
+    });
+
+    // Add picture to Subject_Info
+    subjectInfo.push({
+      url: SUBJECT_PHOTO_URL,
+      valuePhoto: patientPhotos
+    });
+
+    // I had to made up this one, so I'm not sure this is the proper way to add a picture for these credential type
+  } else {
+    // Patient
+    const patient = {
+      resourceType: "Patient",
+      id: "p1",
+      name: [{ family: familyName, given: [givenName] }],
+      photo: patientPhotos
+    };
+    if (gender) {
+      patient.gender = gender;
+    }
+    if (birthDate) {
+      patient.birthDate = birthDate;
+    }
+
+    addPatient_(vc.credentialSubject, patient);
   }
-  if (birthDate) {
-    patient.birthDate = birthDate;
-  }
-  vc.credentialSubject.contained.push(patient);
+}
+
+function addPatient_(doc, patient) {
   const patientRef = { type: "Patient", reference: "#p1" };
 
+  doc.contained.push(patient);
+
   // Patient -- Immunization
-  if (vc.credentialSubject.resourceType == "Immunization") {
-    vc.credentialSubject.patient = patientRef;
+  if (doc.resourceType == "Immunization") {
+    doc.patient = patientRef;
   }
 
   // Patient -- DiagnosticReport
-  else if (vc.credentialSubject.resourceType == "DiagnosticReport") {
-    vc.credentialSubject.subject = patientRef;
-    const specimen = getById(vc.credentialSubject.contained, "specimen1");
+  else if (doc.resourceType == "DiagnosticReport") {
+    doct.subject = patientRef;
+    const specimen = getById(doc.contained, "specimen1");
     if (!specimen) {
       throw new Error(
-        "Malformed document: credentialSubject.contained does not contain specimen"
+        "Malformed document: contained does not contain specimen"
       );
     }
     specimen.subject = patientRef;
-    const observation = getById(vc.credentialSubject.contained, "r1");
+    const observation = getById(doc.contained, "r1");
     if (!observation) {
       throw new Error(
-        "Malformed document: credentialSubject.contained does not contain observation"
+        "Malformed document: contained does not contain observation"
       );
     }
     observation.subject = patientRef;
@@ -187,7 +240,7 @@ function addPractitioner_(doc, practitioner) {
 const resultComment = {
   Negative: "Low IgG antibodies to SARS-CoV-2 (COVID-19).",
   Positive:
-    "Detection of IgG antibodies may indicate exposure to SARS-CoV-2 (COVID-19). It usually takes at least 10 days after symptom onset for IgG to reach detectable levels. An IgG positive result may suggest an immune response to a primary infection with SARS-CoV-2, but the relationship between IgG positivity and immunity to SARS-CoV-2 has not yet been firmly established. Antibody tests have not been shown to definitively diagnose or exclude SARS CoV-2 infection. Diagnosis of COVID-19 is made by detection of SARS-CoV-2 RNA by molecular testing methods, consistent with a patient's clinical findings. This test has not been reviewed by the FDA. Negative results do not rule out SARS-CoV-2 infection particularly in those who have been in contact with the virus. Follow-up testing with a molecular diagnostic should be considered to rule out infection in these individuals. Results from antibody testing should not be used as the sole basis to diagnose or exclude SARS-CoV-2 infection or to inform infection status. Positive results could also be due to past or present infection with non-SARS-CoV-2 coronavirus strains, such as coronavirus HKU1, NL63, OC43, or 229E. This test is not to be used for the screening of donated blood.",
+    "Detection of IgG antibodies may indicate exposure to SARS-CoV-2 (COVID-19). It usually takes at least 10 days after symptom onset for IgG to reach detectable levels. An IgG positive result may suggest an immune response to a primary infection with SARS-CoV-2, but the relationship between IgG positivity and immunity to SARS-CoV-2 has not yet been firmly established. Antibody tests have not been shown to definitively diagnose or exclude SARS CoV-2 infection. Diagnosis of COVID-19 is made by detection of SARS-CoV-2 RNA by molecular testing methods, consistent with a patient's clinical findings. This test has not been reviewed by the FDA. Negative results do not rule out SARS-CoV-2 infection particularly in those who have been in contact with the virus. Follow-up testing with a molecular diagnostic should be considered to rule out infection in these individuals. Results from antibody testing should not be used as the sole basis to diagnose or exclude SARS-CoV-2 infection or to inform infection status. Positive results could also be due to past or present infection with non-SARS-CoV-2 coronavirus strains, such as coronavirus HKU1, NL63, OC43, or 229E. This test is not to be used for the screening of donated blood."
 };
 
 const immunizationCertificate = {
@@ -207,16 +260,16 @@ const immunizationCertificate = {
         resourceType: "Location",
         id: "address1",
         address: { city: "Houston", state: "TX", country: "US" },
-      },
+      }
     ],
     vaccineCode: {
-      coding: [{ system: "urn:oid:1.2.36.1.2001.1005.17", code: "COVID-19" }],
+      coding: [{ system: "urn:oid:1.2.36.1.20011005.17", code: "COVID-19" }],
       text: "Covid-19 (Coronavirus SARS-CoV-2)",
     },
     primarySource: true,
-    manufacturer: { type: "Organization", reference: "#manufacturer1" },
+    manufacturer: { type: "Organization", reference: "#manfacturer1" },
     location: { type: "Location", reference: "#address1" },
-  },
+  }
 };
 
 const diagnosticReport = {
@@ -257,7 +310,8 @@ const fhirCredential = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
     "https://schema.opencerta.org/proof",
-    "https://schema.opencerta.org/fhir/202009"
+    ,
+    "https://schema.opencerta.org/fhir/202009",
   ],
   type: ["VerifiableCredential", "FHIRCredential"],
   credentialSubject: {
@@ -269,8 +323,8 @@ const fhirCredential = {
     fhirSource: {
       id: "566092",
       meta: {
-        // lastUpdated: "2020-09-23T19:29:13.162-04:00",
-        versionId: "1"
+        // lastUpdated,: "2020-09-23T19:29:13.162-04:00",
+        versionId: "1",
       },
       contained: [
         // {
@@ -283,18 +337,18 @@ const fhirCredential = {
         coding: [
           {
             code: "LAB",
-            system: "http://hl7.org/fhir/DiagnosticReport-category"
-          }
-        ]
+            system: "http://hl7.org/fhir/DiagnosticReport-category",
+          },
+        ],
       },
       code: {
         coding: [
           {
             code: "94500-6",
             display: "SARS-COV-2, NAA",
-            system: "http://loinc.org"
-          }
-        ]
+            system: "http://loinc.org",
+          },
+        ],
       },
       // effectiveDateTime: "2020-07-14T23:10:45-06:00",
       // issued: "2020-07-14T23:10:45-06:00",
@@ -330,38 +384,38 @@ const fhirCredential = {
                   "http://commonpass.org/fhir/StructureDefinition/subject-identifier-info",
                 valueIdentifier: {
                   assigner: {
-                    display: "UK"
+                    display: "UK",
                   },
                   period: {
-                    end: "2023-01-14"
+                    end: "2023-01-14",
                   },
                   type: {
                     coding: [
                       {
                         code: "PPN",
                         display: "Passport Number",
-                        system: "http://hl7.org/fhir/v2/0203"
-                      }
-                    ]
+                        system: "http://hl7.org/fhir/v2/0203",
+                      },
+                    ],
                   },
-                  value: "9872349875987"
-                }
-              }
-            ]
-          }
+                  value: "9872349875987",
+                },
+              },
+            ],
+          },
         ],
-        // display: "Lab A Patient",
-        reference: "Patient/566092"
+        // display: "Lab A Patient",,
+        reference: "Patient/566092",
       },
-      resourceType: "DiagnosticReport"
+      resourceType: "DiagnosticReport",
     }
-  }
+  },
 };
 
 const vcTypes = {
   Immunization: immunizationCertificate,
   DiagnosticReport: diagnosticReport,
-  FHIRCredential: fhirCredential
+  FHIRCredential: fhirCredential,
 };
 
 module.exports = { newHealthCertificate, addPatientData, addPractitionerData };
