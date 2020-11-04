@@ -15,7 +15,7 @@ function parseCertificatePem(pem) {
 
 function getCertificateSerialNbr(cert) {
   const buff = cert.serialNumber.valueBlock.valueHex;
-  return new Buffer.from(buff).toString("hex");
+  return Buffer.from(buff).toString("hex");
 }
 
 module.exports = { parseCertificatePem, getCertificateSerialNbr };

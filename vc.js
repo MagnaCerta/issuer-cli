@@ -4,12 +4,12 @@ const { callService } = require("./client");
 const {
   newHealthCertificate,
   addPatientData,
-  addPractitionerData,
+  addPractitionerData
 } = require("./healthCertificate");
 const {
   buildIssuecertaRequest,
   buildVerifycertaRequest,
-  proofFromResponse,
+  proofFromResponse
 } = require("./builders");
 const { parseCertificatePem, getCertificateSerialNbr } = require("./parsers");
 
@@ -60,6 +60,7 @@ async function sign(healthCertFile, { issuer, digitalpenId, ...credentials }) {
     const cert = parseCertificatePem(certPem);
     serialNbr = getCertificateSerialNbr(cert);
   }
+  serialNbr = serialNbr.padStart(40, "0");
   vc.issuanceDate = new Date().toISOString();
 
   // Do not modify vc beyond this point, otherwise its digest will be different when trying to verify
