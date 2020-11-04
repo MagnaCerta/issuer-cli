@@ -53,12 +53,15 @@ const vcCommand = cli
 vcCommand
   .command("create <healthCertFile>")
   .requiredOption(
-    "--type <Immunization|DiagnosticReport>",
+    "--type <Immunization|DiagnosticReport|FHIRCredential>",
     "Health Certificate type"
   )
   .requiredOption("--status <status>", "Test status")
   .option("--lotNumber <lotId>", "Lot Number (Immunization only)")
-  .option("--result <result>", "Test result (DiagnosticResult only)")
+  .option(
+    "--result <result>",
+    "Test result (DiagnosticResult and FHIRCredential only)"
+  )
   .action(vc.create);
 
 vcCommand
