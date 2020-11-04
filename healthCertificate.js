@@ -8,7 +8,7 @@ function newHealthCertificate({ type, status, lotNumber, result }) {
   const expirationDateStr = expirationDate.toISOString();
   const vc = vcTypes[type];
   if (!vc) {
-    throw new Error(`Type must be one of ${Object.keys(vcTypes)}`);
+    throw new Error(`Type must be one of {${Object.keys(vcTypes)}}`);
   }
 
   vc.credentialSubject.id = uuid.v4();
@@ -44,8 +44,8 @@ function newHealthCertificate({ type, status, lotNumber, result }) {
     vc.credentialSubject.contained.push(specimen);
     vc.credentialSubject.specimen = [
       {
-        reference: "#specimen1",
         type: "Specimen",
+        reference: "#specimen1",
       },
     ];
     // Observation
@@ -64,6 +64,9 @@ function newHealthCertificate({ type, status, lotNumber, result }) {
 }
 
 function addResult_(doc, resultStr) {
+  if (!resultStr) {
+    throw new Error(`result must be one of {${Object.keys(resultComment)}}`);
+  }
   const observation = {
     resourceType: "Observation",
     id: "r1",
@@ -85,8 +88,8 @@ function addResult_(doc, resultStr) {
   doc.contained.push(observation);
   doc.result = [
     {
-      reference: "#r1",
       type: "Observation",
+      reference: "#r1"
     },
   ];
 }
@@ -100,7 +103,7 @@ function addPatientData(
   }
   // Patient
   const patient = {
-    resourceType: "Patient",
+    resourceType: "≈",
     id: "p1",
     name: [{ family: familyName, given: [givenName] }],
     photo: photo.map((p) => {
@@ -114,7 +117,7 @@ function addPatientData(
     patient.birthDate = birthDate;
   }
   vc.credentialSubject.contained.push(patient);
-  const patientRef = { reference: "#p1", type: "Patient" };
+  const patientRef = { type: "Patient", reference: "#p1" };
 
   // Patient -- Immunization
   if (vc.credentialSubject.resourceType == "Immunization") {
@@ -147,27 +150,34 @@ function addPractitionerData(vc, { givenName, familyName, prefix }) {
     practitionerName.prefix = [prefix];
   }
   const practitioner = {
-    resourceType: "practitioner1",
+    resourceType: "Practitioner",
     id: "Dr.1",
     name: [practitionerName],
   };
-  vc.credentialSubject.contained.push(practitioner);
-  const practitionerRef = { id: "#performer1" };
 
+  const doc = vc.type.includes("FHIRCredential")
+    ? vc.credentialSubject.fhirSource
+    : vc.credentialSubject;
+  addPractitioner_(doc, practitioner);
+}
+
+function addPractitioner_(doc, practitioner) {
+  const practitionerRef = { id: "#performer1" };
+  doc.contained.push(practitioner);
   // Practitioner -- Immunization
-  if (vc.credentialSubject.resourceType == "Immunization") {
-    practitionerRef.actor = { reference: "#practitioner1" };
-    vc.credentialSubject.practitioner = [practitionerRef];
+  if (doc.resourceType == "Immunization") {
+    practitionerRef.actor = { reference: "Practitioner/Dr.1" };
+    doc.practitioner = [practitionerRef];
   }
 
   // Practitioner -- DiagnosticReport
-  else if (vc.credentialSubject.resourceType == "DiagnosticReport") {
+  else if (doc.resourceType == "DiagnosticReport") {
     practitionerRef.actor = { reference: "#org1" };
-    vc.credentialSubject.performer = practitionerRef;
-    const observation = getById(vc.credentialSubject.contained, "r1");
+    doc.performer = practitionerRef;
+    const observation = getById(doc.contained, "r1");
     if (!observation) {
       throw new Error(
-        "Malformed document: credentialSubject.contained does not contain observation"
+        "Malformed document: contained does not contain observation #r1"
       );
     }
     observation.performer = practitionerRef;
@@ -175,8 +185,8 @@ function addPractitionerData(vc, { givenName, familyName, prefix }) {
 }
 
 const resultComment = {
-  Positive: "Low IgG antibodies to SARS-CoV-2 (COVID-19).",
-  Negative:
+  Negative: "Low IgG antibodies to SARS-CoV-2 (COVID-19).",
+  Positive:
     "Detection of IgG antibodies may indicate exposure to SARS-CoV-2 (COVID-19). It usually takes at least 10 days after symptom onset for IgG to reach detectable levels. An IgG positive result may suggest an immune response to a primary infection with SARS-CoV-2, but the relationship between IgG positivity and immunity to SARS-CoV-2 has not yet been firmly established. Antibody tests have not been shown to definitively diagnose or exclude SARS CoV-2 infection. Diagnosis of COVID-19 is made by detection of SARS-CoV-2 RNA by molecular testing methods, consistent with a patient's clinical findings. This test has not been reviewed by the FDA. Negative results do not rule out SARS-CoV-2 infection particularly in those who have been in contact with the virus. Follow-up testing with a molecular diagnostic should be considered to rule out infection in these individuals. Results from antibody testing should not be used as the sole basis to diagnose or exclude SARS-CoV-2 infection or to inform infection status. Positive results could also be due to past or present infection with non-SARS-CoV-2 coronavirus strains, such as coronavirus HKU1, NL63, OC43, or 229E. This test is not to be used for the screening of donated blood.",
 };
 
@@ -204,8 +214,8 @@ const immunizationCertificate = {
       text: "Covid-19 (Coronavirus SARS-CoV-2)",
     },
     primarySource: true,
-    manufacturer: { reference: "#manufacturer1", type: "Organization" },
-    location: { reference: "#address1", type: "Location" },
+    manufacturer: { type: "Organization", reference: "#manufacturer1" },
+    location: { type: "Location", reference: "#address1" },
   },
 };
 
@@ -263,11 +273,11 @@ const fhirCredential = {
         versionId: "1"
       },
       contained: [
-        {
-          id: "8932748723984",
-          name: "Test Facility A",
-          resourceType: "Organization"
-        }
+        // {
+        //   id: "8932748723984",
+        //   name: "Test Facility A",
+        //   resourceType: "Organization",
+        // },
       ],
       category: {
         coding: [
@@ -288,10 +298,10 @@ const fhirCredential = {
       },
       // effectiveDateTime: "2020-07-14T23:10:45-06:00",
       // issued: "2020-07-14T23:10:45-06:00",
-      performer: {
-        display: "Test Facility A",
-        reference: "#8932748723984"
-      },
+      // performer: {
+      //   type: "Organization",
+      //   reference: "#8932748723984",
+      // },
       // result: [
       //   {
       //     reference: "Observation/566090"
