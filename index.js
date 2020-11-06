@@ -3,6 +3,7 @@ const keypair = require("./keypair");
 const csr = require("./csr");
 const vc = require("./vc");
 const preprocess = require("./preprocess");
+const qr = require("./qr");
 
 const cli = new Command();
 cli.version("0.0.1");
@@ -100,5 +101,13 @@ vcCommand
   .option("--username <username>", "Practitioner first name")
   .option("--password <password>", "Practitioner last name")
   .action(vc.validate);
+
+vcCommand
+  .command("qrencode <healthCertFile>")
+  .requiredOption("--outfile <outfile>", "Output image file name")
+  .option("--token <token>", "API TOKEN")
+  .option("--username <username>", "Practitioner first name")
+  .option("--password <password>", "Practitioner last name")
+  .action(qr.encode);
 
 cli.parseAsync(process.argv).catch(console.log);
