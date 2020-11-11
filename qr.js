@@ -5,15 +5,15 @@ async function encode(vc, { outfile, ...credentials }) {
   const vcStrIn = fs.readFileSync(vc);
   const vcJson = JSON.parse(vcStrIn);
   const payload = JSON.stringify(vcJson);
-  console.log("LEN", payload.length);
+  // console.log("LEN", payload.length);
 
   const request = {
     payload: payload,
     as_chunks: true,
     options: {
       // code_quantity: 4,
-      bytes_per_code: 4000,
-    },
+      bytes_per_code: 4000
+    }
   };
 
   try {
