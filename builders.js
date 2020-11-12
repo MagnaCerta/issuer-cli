@@ -8,10 +8,10 @@ function buildCreateKeyRequest(org_id) {
       algorithm: 2, // ECDSA
       options: {
         Curve: "SECP256R1",
-        Hash: "SHA256",
-      },
+        Hash: "SHA256"
+      }
     },
-    org_id,
+    org_id
   };
 }
 
@@ -27,13 +27,14 @@ function buildCreateCSRRequest(
     common_name,
     country,
     organization,
-    subject_alt_name: { emails },
+    subject_alt_name: { emails }
   };
 }
 
-function buildSignCSRRequest(csr_pem, org_id) {
+function buildSignCSRRequest(csr_pem, org_id, expiresInDays) {
+  expiresInDays = parseInt(expiresInDays || "30");
   const expirationDate = new Date();
-  expirationDate.setDate(expirationDate.getDate() + 30); // 30-day validity
+  expirationDate.setDate(expirationDate.getDate() + expiresInDays); // 30-day validity
   return {
     csr_pem,
     org_id,
