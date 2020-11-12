@@ -68,14 +68,9 @@ vcCommand
 
 vcCommand
   .command("patient <healthCertFile>")
-  .requiredOption("--givenName <givenName>", "Patient first name")
-  .requiredOption("--familyName <familyName>", "Patient last name")
-  .requiredOption(
-    "--photo <file>",
-    "Add patient pictures",
-    preprocess.concat,
-    []
-  )
+  .option("--givenName <givenName>", "Patient first name")
+  .option("--familyName <familyName>", "Patient last name")
+  .option("--photo <file>", "Add patient pictures", preprocess.concat, [])
   .option("--gender <gender>", "Patient gender")
   .option("--birthDate <date>", "Birth Date")
   .action(vc.addPatient);

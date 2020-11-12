@@ -23,11 +23,17 @@ async function create(healthCertFile, opts) {
 async function addPatient(healthCertFile, { photo, ...patientData }) {
   const vcStrIn = fs.readFileSync(healthCertFile);
   const vc = JSON.parse(vcStrIn);
-  const img = await loadImage(photo[0]);
-  const canvas = createCanvas(img.width, img.height);
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0);
-  patientData.photo = [canvas.toDataURL()];
+
+  patientData.photo = await Promise.all(
+    photo.map(async (p) => {
+      const img = await loadImage(p);
+      const canvas = createCanvas(img.width, img.height);
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      return canvas.toDataURL();
+    })
+  );
+
   addPatientData(vc, patientData);
   const vcStrOut = JSON.stringify(vc, null, 2);
   fs.writeFileSync(healthCertFile, vcStrOut);

@@ -52,8 +52,8 @@ function newHealthCertificate({ type, status, lotNumber, result }) {
     vc.credentialSubject.specimen = [
       {
         type: "Specimen",
-        reference: "#specimen1"
-      }
+        reference: "#specimen1",
+      },
     ];
     // Observation
     addResult_(vc.credentialSubject, result);
@@ -83,21 +83,21 @@ function addResult_(doc, resultStr) {
         {
           system: "https://www.questd.com/codes",
           code: "AZD1222",
-          display: "serology results"
-        }
+          display: "serology results",
+        },
       ],
-      text: "serology results"
+      text: "serology results",
     },
     valueString: resultStr,
-    comment: resultComment[resultStr]
+    comment: resultComment[resultStr],
   };
   doc.contained = doc.contained || [];
   doc.contained.push(observation);
   doc.result = [
     {
       type: "Observation",
-      reference: "#r1"
-    }
+      reference: "#r1",
+    },
   ];
 }
 
@@ -105,9 +105,6 @@ function addPatientData(
   vc,
   { givenName, familyName, photo, gender, birthDate }
 ) {
-  if (photo.length == 0) {
-    throw new Error("At least one photo must be provided");
-  }
   const patientPhotos = photo.map((p) => {
     return { data: p };
   });
@@ -126,35 +123,56 @@ function addPatientData(
     } else {
       const newSubjectInfoExt = {
         url: SUBJECT_INFO_URL,
-        extension: []
+        extension: [],
       };
       subjectExts.push(newSubjectInfoExt);
       subjectInfo = newSubjectInfoExt.extension;
     }
 
     // Add Name_Info to Subject_Info
-    subjectInfo.push({
-      url: SUBJECT_NAME_INFO_URL,
-      valueHumanName: {
-        family: [familyName],
-        given: [givenName]
-      }
-    });
+    if (familyName && givenName) {
+      vc.credentialSubject.givenName = givenName;
+      vc.credentialSubject.familyName = familyName;
+      subjectInfo.push({
+        url: SUBJECT_NAME_INFO_URL,
+        valueHumanName: {
+          family: [familyName],
+          given: [givenName],
+        },
+      });
+    } else if (familyName || givenName) {
+      throw "familyName and givenName are expected to be set simultaneously";
+    }
 
     // Add picture to Subject_Info
-    subjectInfo.push({
-      url: SUBJECT_PHOTO_URL,
-      valuePhoto: patientPhotos
-    });
+    if (patientPhotos.length > 0) {
+      const photoInfoElement = subjectInfo.find(
+        (info) => info.url === SUBJECT_PHOTO_URL
+      );
+      if (photoInfoElement) {
+        photoInfoElement.valuePhoto.push(...patientPhotos);
+      } else {
+        subjectInfo.push({
+          url: SUBJECT_PHOTO_URL,
+          valuePhoto: patientPhotos,
+        });
+      }
+    }
 
     // I had to made up this one, so I'm not sure this is the proper way to add a picture for these credential type
   } else {
+    if (patientPhotos.length == 0) {
+      throw new Error("At least one photo must be provided");
+    } else if (!familyName && !givenName) {
+      throw new Error("familyName and givenName not set");
+    }
+
     // Patient
     const patient = {
       resourceType: "Patient",
       id: "p1",
       name: [{ family: familyName, given: [givenName] }],
-      photo: patientPhotos
+      photo: patientPhotos,
     };
     if (gender) {
       patient.gender = gender;
@@ -260,7 +278,7 @@ const immunizationCertificate = {
         resourceType: "Location",
         id: "address1",
         address: { city: "Houston", state: "TX", country: "US" },
-      }
+      },
     ],
     vaccineCode: {
       coding: [{ system: "urn:oid:1.2.36.1.20011005.17", code: "COVID-19" }],
@@ -269,7 +287,7 @@ const immunizationCertificate = {
     primarySource: true,
     manufacturer: { type: "Organization", reference: "#manfacturer1" },
     location: { type: "Location", reference: "#address1" },
-  }
+  },
 };
 
 const diagnosticReport = {
@@ -310,7 +328,6 @@ const fhirCredential = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
     "https://schema.opencerta.org/proof",
-    ,
     "https://schema.opencerta.org/fhir/202009",
   ],
   type: ["VerifiableCredential", "FHIRCredential"],
@@ -408,7 +425,7 @@ const fhirCredential = {
         reference: "Patient/566092",
       },
       resourceType: "DiagnosticReport",
-    }
+    },
   },
 };
 
