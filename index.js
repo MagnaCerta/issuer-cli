@@ -41,6 +41,7 @@ cli
   .description("Create certificate from CSR")
   .requiredOption("--csrFile <file>", "Certification request input")
   .requiredOption("--orgId <orgId>", "Organization ID")
+  .option("--expiresInDays <days>", "Validity period in days (defalt 30)")
   .option("--token <token>", "API TOKEN")
   .option("--username <username>", "Practitioner first name")
   .option("--password <password>", "Practitioner last name")

@@ -18,11 +18,14 @@ async function create(
   }
 }
 
-async function sign(certFile, { csrFile, orgId, ...credentials }) {
+async function sign(
+  certFile,
+  { csrFile, orgId, expiresInDays, ...credentials }
+) {
   try {
     const csrPem = fs.readFileSync(csrFile).toString("ascii");
-    const request = buildSignCSRRequest(csrPem, orgId);
-    // console.log(req);
+    const request = buildSignCSRRequest(csrPem, orgId, expiresInDays);
+    // console.log(request);
     const res = await callService("/certas/v1/signCSR", request, credentials);
     var certPem = res.cert_pem;
     console.log("CERTIFICATE", certPem);
