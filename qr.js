@@ -11,8 +11,8 @@ async function encode(vc, { outfile, ...credentials }) {
     payload: payload,
     as_chunks: true,
     options: {
-      // code_quantity: 4,
-      bytes_per_code: 4000
+      code_quantity: 4
+      // bytes_per_code: 4000
     }
   };
 

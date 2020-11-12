@@ -77,3 +77,7 @@ Alternatively, if you have the digital pen (PEM certificate) file:
 4. (Optional): Validate signature with X509 certificate file public key
 
 `node index.js vc validate --username username --password password immunization.json`
+
+5. (Optional): Create QR-encoded certa
+
+`node index.js vc qrencode --outfile immunization.png --username username --password password immunization.json`
