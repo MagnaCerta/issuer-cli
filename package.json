@@ -13,6 +13,7 @@
     "commander": "^6.1.0",
     "jsonld-signatures": "^5.1.0",
     "node-forge": "^0.10.0",
+    "pkijs": "^2.1.90",
     "vc-js": "^0.6.4"
   },
   "devDependencies": {

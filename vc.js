@@ -1,21 +1,17 @@
 const fs = require("fs");
-const forge = require("node-forge");
 const { createCanvas, loadImage } = require("canvas");
-const {
-  RSAKeyPair,
-  sign: jsonldsign,
-  verify: jsonldverify,
-  suites: { RsaSignature2018 },
-  purposes: { AssertionProofPurpose },
-} = require("jsonld-signatures");
-const { compareKeys } = require("./csr");
-const { load } = require("./keypair");
+const { callService } = require("./client");
 const {
   newHealthCertificate,
   addPatientData,
-  addPractitionerData,
+  addPractitionerData
 } = require("./healthCertificate");
-const { customLoader } = require("./documentloaders");
+const {
+  buildIssuecertaRequest,
+  buildVerifycertaRequest,
+  proofFromResponse
+} = require("./builders");
+const { parseCertificatePem, getCertificateSerialNbr } = require("./parsers");
 
 async function create(healthCertFile, opts) {
   // console.log(opts);
@@ -27,87 +23,91 @@ async function create(healthCertFile, opts) {
 async function addPatient(healthCertFile, { photo, ...patientData }) {
   const vcStrIn = fs.readFileSync(healthCertFile);
   const vc = JSON.parse(vcStrIn);
-  const img = await loadImage(photo[0]);
-  const canvas = createCanvas(img.width, img.height);
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0);
-  patientData.photo = [canvas.toDataURL()];
+
+  patientData.photo = await Promise.all(
+    photo.map(async (p) => {
+      const img = await loadImage(p);
+      const canvas = createCanvas(img.width, img.height);
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      return canvas.toDataURL();
+    })
+  );
+
   addPatientData(vc, patientData);
   const vcStrOut = JSON.stringify(vc, null, 2);
   fs.writeFileSync(healthCertFile, vcStrOut);
 }
 
-async function sign(
-  healthCertFile,
-  { signingKeyName, issuer, ...practitionerData }
-) {
+async function addPractitioner(healthCertFile, { ...practitionerData }) {
+  const vcStrIn = fs.readFileSync(healthCertFile);
+  const vc = JSON.parse(vcStrIn);
+  addPractitionerData(vc, practitionerData);
+  const vcStrOut = JSON.stringify(vc, null, 2);
+  fs.writeFileSync(healthCertFile, vcStrOut);
+}
+
+async function sign(healthCertFile, { issuer, digitalpenId, ...credentials }) {
   const vcStrIn = fs.readFileSync(healthCertFile);
   const vc = JSON.parse(vcStrIn);
   if (vc.proof) {
     throw new Error("Health certificate has been already signed");
   }
-  const key = load(signingKeyName);
-  addPractitionerData(vc, practitionerData);
 
-  const certPem = fs.readFileSync(issuer);
-  const cert = forge.pki.certificateFromPem(certPem);
-  const serialNbr = cert.serialNumber;
-  const subjKeyId = cert.getExtension({
-    name: "subjectKeyIdentifier",
-  }).subjectKeyIdentifier;
-  vc.issuanceDate = new Date().toISOString();
-  vc.issuer = `https://example.edu/issuers/${serialNbr}/${subjKeyId}`;
-
-  if (!compareKeys(key.publicKey, cert.publicKey)) {
-    throw new Error("Supplied key and (issuer) cert key must match");
+  if (!issuer && !digitalpenId) {
+    throw "One of {issuer, digitalpenId} is expected";
   }
-  const keyPair = new RSAKeyPair(key);
-  const suite = new RsaSignature2018({
-    verificationMethod: vc.issuer,
-    key: keyPair,
-  });
-  const signedVC = await jsonldsign(vc, {
-    suite,
-    documentLoader: customLoader,
-    purpose: new AssertionProofPurpose(),
-  });
-  const vcStrOut = JSON.stringify(signedVC, null, 2);
-  fs.writeFileSync(healthCertFile, vcStrOut);
+
+  let serialNbr;
+  if (digitalpenId) {
+    serialNbr = digitalpenId;
+  } else {
+    const certPem = fs.readFileSync(issuer).toString();
+    const cert = parseCertificatePem(certPem);
+    serialNbr = getCertificateSerialNbr(cert);
+  }
+  serialNbr = serialNbr.padStart(40, "0");
+  vc.issuanceDate = new Date().toISOString();
+
+  // Do not modify vc beyond this point, otherwise its digest will be different when trying to verify
+  const signRequest = await buildIssuecertaRequest(vc, serialNbr);
+  // console.log("Request", signRequest);
+
+  try {
+    const signResponse = await callService(
+      "/certas/v1/issueCerta",
+      signRequest,
+      credentials
+    );
+    vc.proof = proofFromResponse(signResponse.proof);
+
+    const vcStrOut = JSON.stringify(vc, null, 2);
+    fs.writeFileSync(healthCertFile, vcStrOut);
+  } catch (err) {
+    throw err;
+  }
 }
 
-async function validate(healthCertFile, { issuer }) {
+async function validate(healthCertFile, credentials) {
   const vcStrIn = fs.readFileSync(healthCertFile);
   const vc = JSON.parse(vcStrIn);
   if (!vc.proof) {
     throw new Error("Health certificate has not been signed");
   }
-  const certPem = fs.readFileSync(issuer);
-  const cert = forge.pki.certificateFromPem(certPem);
-  const key = { publicKeyPem: forge.pki.publicKeyToPem(cert.publicKey) };
-  const keyId = vc.proof.verificationMethod;
-  // console.log("LDKEY", key);
-  const keyPair = new RSAKeyPair({ id: keyId, ...key });
-  const suite = new RsaSignature2018({
-    verificationMethod: keyId,
-    key: keyPair,
-  });
-  const controller = {
-    "@context": "https://w3id.org/security/v2",
-    publicKey: [keyPair],
-    assertionMethod: [keyId],
-  };
-  const verifyOpts = {
-    suite,
-    documentLoader: customLoader,
-    purpose: new AssertionProofPurpose({ controller }),
-  };
-  // console.log("VERIFYOPTS", verifyOpts);
-  const result = await jsonldverify(vc, verifyOpts);
-  if (result.verified) {
-    console.log("VALID");
-  } else {
-    console.log("INVALID:", result.error.errors);
+
+  const verifyRequest = await buildVerifycertaRequest(vc);
+  // console.log("Request", verifyRequest);
+
+  try {
+    const verifyResponse = await callService(
+      "/certas/v1/validateCerta",
+      verifyRequest,
+      credentials
+    );
+    console.log(verifyResponse);
+  } catch (err) {
+    throw err;
   }
 }
 
-module.exports = { create, addPatient, sign, validate };
+module.exports = { create, addPatient, addPractitioner, sign, validate };

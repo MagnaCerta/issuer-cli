@@ -1,9 +1,44 @@
-function buildSignDigitalpenRequest(csrpem, orgName) {
+const { createCredentialDigest } = require("./digest");
+const { customLoader } = require("./documentloaders");
+const { PARENT_ORG_ID } = require("./constants");
+
+function buildCreateKeyRequest(org_id) {
+  return {
+    algorithm: {
+      algorithm: 2, // ECDSA
+      options: {
+        Curve: "SECP256R1",
+        Hash: "SHA256"
+      }
+    },
+    org_id
+  };
+}
+
+function buildCreateCSRRequest(
+  org_id,
+  common_name,
+  country,
+  organization,
+  emails
+) {
+  return {
+    org_id,
+    common_name,
+    country,
+    organization,
+    subject_alt_name: { emails }
+  };
+}
+
+function buildSignCSRRequest(csr_pem, org_id, expiresInDays) {
+  expiresInDays = parseInt(expiresInDays || "30");
   const expirationDate = new Date();
-  expirationDate.setDate(expirationDate.getDate() + 30); // 30-day validity
-  const built = {
-    csr_pem: csrpem,
-    organization: orgName,
+  expirationDate.setDate(expirationDate.getDate() + expiresInDays); // 30-day validity
+  return {
+    csr_pem,
+    org_id,
+    parent_org_id: PARENT_ORG_ID,
     expires_at: expirationDate.toISOString(),
     key_usage: {
       digital_signature: true
@@ -17,8 +52,73 @@ function buildSignDigitalpenRequest(csrpem, orgName) {
       }
     }
   };
+}
+
+async function buildIssuecertaRequest(vc, serialNumber) {
+  const certa_id = vc.credentialSubject.id;
+  const credentialDigest = await createCredentialDigest(vc, customLoader);
+  const digest = Buffer.from(credentialDigest).toString("base64");
+
+  if (!certa_id) {
+    throw "Invalid document.credentialSubject.id";
+  }
+
+  const built = {
+    certa_id,
+    digitalpen_id: serialNumber,
+    types: vc.type,
+    digest
+  };
 
   return built;
 }
 
-module.exports = { buildSignDigitalpenRequest };
+async function buildVerifycertaRequest(vc) {
+  const certa_id = vc.credentialSubject.id;
+  const proof = proof2Request(vc.proof);
+  delete vc.proof;
+  const credentialDigest = await createCredentialDigest(vc, customLoader);
+  const digest = Buffer.from(credentialDigest).toString("base64");
+
+  if (!certa_id) {
+    throw "Invalid document.credentialSubject.id";
+  }
+
+  const built = {
+    certa_id,
+    digest,
+    proof
+  };
+
+  return built;
+}
+
+function proofFromResponse(proof) {
+  return {
+    created: proof.created,
+    type: proof.type,
+    jws: proof.jws,
+    proofPurpose: proof.proof_purpose,
+    verificationMethod: proof.verification_method
+  };
+}
+
+function proof2Request(proof) {
+  return {
+    created: proof.created,
+    type: proof.type,
+    jws: proof.jws,
+    proof_purpose: proof.proofPurpose,
+    verification_method: proof.verificationMethod
+  };
+}
+
+module.exports = {
+  buildCreateKeyRequest,
+  buildCreateCSRRequest,
+  buildSignCSRRequest,
+  buildIssuecertaRequest,
+  buildVerifycertaRequest,
+  proofFromResponse,
+  proof2Request
+};
