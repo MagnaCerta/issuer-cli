@@ -1,0 +1,123 @@
+{
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1",
+      "https://schema.opencerta.org/proof",
+      "https://schema.opencerta.org/fhir/202009"
+    ],
+    "type": ["VerifiableCredential", "FHIRCredential"],
+    "id": "urn:certa:3d977353-d3ff-414a-9e41-90fa2e402301",
+    "expirationDate": "2021-01-01T19:23:24Z",
+    "credentialSubject": {
+      "type": "FHIRCredential",
+      "INVALID_FIELD_NAME": "TEST_VALUE",
+      "id": "urn:fhir:21836391490.2020.LCLS.32047215.2020-08-05.164055",
+      "givenName": "Dola",
+      "additionalName": "Mayie",
+      "familyName": "Plunkett",
+      "birthDate": "2000-01-01T19:23:24Z",
+      "gender": "Female",
+      "honorificPrefix": "Mrs.",
+      "honorificSuffix": "PhD",
+      "photograph": "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",
+      "fhirVersion": "3.5a.0",
+      "fhirSource": {
+        "id": "21836391490.2020.LCLS.32047215.2020-08-05.164055",
+        "category": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/v2/0074",
+              "code": "LAB"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/2694832"
+        },
+        "effectiveDateTime": "2020-08-05T16:36:00+00:00",
+        "resourceType": "DiagnosticReport",
+        "contained": [
+          {
+            "id": "1",
+            "category": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/observation-category",
+                  "code": "laboratory"
+                }
+              ]
+            },
+            "subject": {
+              "reference": "Patient/2694832"
+            },
+            "effectiveDateTime": "2020-08-05T16:36:00+00:00",
+            "comments": "This sample does not contain detectable SARS-CoV-2 IgG antibodies.\nThis negative result does not rule out SARS-CoV-2 infection.\nCorrelation with epidemiologic risk factors and other clinical and\nlaboratory findings is recommended. Serologic results should not be\nused as the sole basis to diagnose or exclude recent SARS-CoV-2\ninfection.\nThis assay was performed using the Abbott SARS-CoV-2 IgG assay.",
+            "resourceType": "Observation",
+            "code": {
+              "coding": [
+                {
+                  "system": "http://labcorp.com/ers/testCodes",
+                  "display": "SARS-CoV-2 Antibody, IgG",
+                  "code": "164057"
+                },
+                {
+                  "system": "http://loinc.org",
+                  "display": "SARS-CoV-2 Antibody, IgG",
+                  "code": "94563-4"
+                }
+              ]
+            },
+            "interpretation": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/v2/0078",
+                  "code": "N"
+                }
+              ]
+            },
+            "referenceRange": [
+              {
+                "text": "Negative "
+              }
+            ],
+            "meta": {
+              "profile": ["http://fhir.org/guides/argonaut/StructureDefinition/argo-observationresults"]
+            },
+            "valueString": "Negative",
+            "status": "final",
+            "issued": "2020-08-06T16:08:00.000+00:00"
+          }
+        ],
+        "identifier": [
+          {
+            "id": "21836391490.2020.LCLS.32047215.2020-08-05.164055",
+            "system": "http://labcorp.com/ers/diagnosticReport"
+          }
+        ],
+        "code": {
+          "text": "SARS-CoV-2 Antibody, IgG",
+          "coding": [
+            {
+              "system": "http://labcorp.com/ers/testCodes",
+              "display": "SARS-CoV-2 Antibody, IgG",
+              "code": "164055"
+            }
+          ]
+        },
+        "performer": {
+          "display": "Organization/Labcorp"
+        },
+        "meta": {
+          "profile": ["http://fhir.org/guides/argonaut/StructureDefinition/argo-diagnosticreport"],
+          "lastUpdated": "2020-08-06T16:09:08.000+00:00"
+        },
+        "result": [
+          {
+            "reference": "#1"
+          }
+        ],
+        "status": "final",
+        "issued": "2020-08-06T16:08:00.000+00:00"
+      }
+    }
+  }
+  
