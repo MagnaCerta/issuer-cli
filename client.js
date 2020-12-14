@@ -1,12 +1,12 @@
-const axios = require("axios");
-const querystring = require("querystring");
-const { API_BASE_URL, TOKEN_URL } = require("./constants");
+const axios = require('axios');
+const querystring = require('querystring');
+const { API_BASE_URL, TOKEN_URL } = require('./constants');
 
 async function getToken(username, password) {
   const tokenData = {
-    grant_type: "password",
-    scope: "openid",
-    client_id: "digital-pen-app",
+    grant_type: 'password',
+    scope: 'openid',
+    client_id: 'digital-pen-app',
     username,
     password
   };
@@ -16,12 +16,15 @@ async function getToken(username, password) {
       .post(TOKEN_URL, querystring.stringify(tokenData))
       .then((response) => {
         const token = response.data.access_token;
+
         return token;
       });
   } catch (err) {
     if (err.response) {
       throw err.response.data;
-    } else throw err;
+    } else {
+      throw err;
+    }
   }
 }
 
@@ -30,8 +33,8 @@ async function callService(path, request, credentials) {
   if (credentials) {
     const { token, username, password } = credentials;
     if (token || (username && password)) {
-      const authToken = token || (await getToken(username, password));
-      requestOpts.headers = { Authorization: "Bearer " + authToken };
+      const authToken = token || await getToken(username, password);
+      requestOpts.headers = { Authorization: `Bearer ${authToken}` };
       // console.log(requestOpts);
     }
   }
@@ -42,6 +45,7 @@ async function callService(path, request, credentials) {
       request,
       requestOpts
     );
+
     return response.data;
   } catch (err) {
     if (err.response) {

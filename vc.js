@@ -1,72 +1,73 @@
-const fs = require("fs");
-const { createCanvas, loadImage } = require("canvas");
-const { callService } = require("./client");
+const fs = require('fs');
+const { createCanvas, loadImage } = require('canvas');
+const { callService } = require('./client');
 const {
   newHealthCertificate,
   addPatientData,
   addPractitionerData
-} = require("./healthCertificate");
+} = require('./healthCertificate');
 const {
   buildIssuecertaRequest,
   buildVerifycertaRequest,
   proofFromResponse
-} = require("./builders");
-const { parseCertificatePem, getCertificateSerialNbr } = require("./parsers");
+} = require('./builders');
+const { parseCertificatePem, getCertificateSerialNbr } = require('./parsers');
 
 async function create(healthCertFile, opts) {
   // console.log(opts);
   const vc = newHealthCertificate(opts);
   const vcStr = JSON.stringify(vc, null, 2);
-  fs.writeFileSync(healthCertFile, vcStr);
+  await fs.writeFile(healthCertFile, vcStr);
 }
 
 async function addPatient(healthCertFile, { photo, ...patientData }) {
-  const vcStrIn = fs.readFileSync(healthCertFile);
+  const vcStrIn = await fs.readFile(healthCertFile);
   const vc = JSON.parse(vcStrIn);
 
   patientData.photo = await Promise.all(
     photo.map(async (p) => {
       const img = await loadImage(p);
       const canvas = createCanvas(img.width, img.height);
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
+
       return canvas.toDataURL();
     })
   );
 
   addPatientData(vc, patientData);
   const vcStrOut = JSON.stringify(vc, null, 2);
-  fs.writeFileSync(healthCertFile, vcStrOut);
+  await fs.writeFile(healthCertFile, vcStrOut);
 }
 
 async function addPractitioner(healthCertFile, { ...practitionerData }) {
-  const vcStrIn = fs.readFileSync(healthCertFile);
+  const vcStrIn = await fs.readFile(healthCertFile);
   const vc = JSON.parse(vcStrIn);
   addPractitionerData(vc, practitionerData);
   const vcStrOut = JSON.stringify(vc, null, 2);
-  fs.writeFileSync(healthCertFile, vcStrOut);
+  await fs.writeFile(healthCertFile, vcStrOut);
 }
 
 async function sign(healthCertFile, { issuer, digitalpenId, ...credentials }) {
-  const vcStrIn = fs.readFileSync(healthCertFile);
+  const vcStrIn = await fs.readFile(healthCertFile);
   const vc = JSON.parse(vcStrIn);
   if (vc.proof) {
-    throw new Error("Health certificate has been already signed");
+    throw new Error('Health certificate has been already signed');
   }
 
   if (!issuer && !digitalpenId) {
-    throw "One of {issuer, digitalpenId} is expected";
+    throw 'One of {issuer, digitalpenId} is expected';
   }
 
   let serialNbr;
   if (digitalpenId) {
     serialNbr = digitalpenId;
   } else {
-    const certPem = fs.readFileSync(issuer).toString();
+    const certPem = await fs.readFile(issuer).toString();
     const cert = parseCertificatePem(certPem);
     serialNbr = getCertificateSerialNbr(cert);
   }
-  serialNbr = serialNbr.padStart(40, "0");
+  serialNbr = serialNbr.padStart(40, '0');
   vc.issuanceDate = new Date().toISOString();
 
   // Do not modify vc beyond this point, otherwise its digest will be different when trying to verify
@@ -75,24 +76,24 @@ async function sign(healthCertFile, { issuer, digitalpenId, ...credentials }) {
 
   try {
     const signResponse = await callService(
-      "/certas/v1/issueCerta",
+      '/certas/v1/issueCerta',
       signRequest,
       credentials
     );
     vc.proof = proofFromResponse(signResponse.proof);
 
     const vcStrOut = JSON.stringify(vc, null, 2);
-    fs.writeFileSync(healthCertFile, vcStrOut);
+    await fs.writeFile(healthCertFile, vcStrOut);
   } catch (err) {
     throw err;
   }
 }
 
 async function validate(healthCertFile, credentials) {
-  const vcStrIn = fs.readFileSync(healthCertFile);
+  const vcStrIn = await fs.readFile(healthCertFile);
   const vc = JSON.parse(vcStrIn);
   if (!vc.proof) {
-    throw new Error("Health certificate has not been signed");
+    throw new Error('Health certificate has not been signed');
   }
 
   const verifyRequest = await buildVerifycertaRequest(vc);
@@ -100,7 +101,7 @@ async function validate(healthCertFile, credentials) {
 
   try {
     const verifyResponse = await callService(
-      "/certas/v1/validateCerta",
+      '/certas/v1/validateCerta',
       verifyRequest,
       credentials
     );
