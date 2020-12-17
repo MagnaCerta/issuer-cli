@@ -1,8 +1,27 @@
 const jsonld = require("jsonld");
 const forge = require("node-forge");
+const { SECURITY_CONTEXT_URL } = require("jsonld-signatures");
 
-async function createCredentialDigest(document, documentLoader) {
-  const canonized = await canonizeCredential(document, { documentLoader });
+async function createCredentialDigest(
+  document,
+  documentLoader,
+  {
+    ctx = SECURITY_CONTEXT_URL,
+    expansionMap = strictExpansionMap,
+    compactToRelative = false,
+  } = {}
+) {
+  // Step 1. Expand-and-compact
+  const doc = await jsonld.compact(document, ctx, {
+    documentLoader,
+    expansionMap,
+    compactToRelative,
+  });
+  // Step 2:
+  const canonized = await canonizeCredential(doc, {
+    documentLoader,
+    expansionMap,
+  });
   return sha256(canonized);
 }
 
@@ -18,9 +37,23 @@ async function canonizeCredential(
     documentLoader,
     expansionMap,
     skipExpansion,
-    useNative: useNativeCanonize
+    useNative: useNativeCanonize,
   });
 }
+
+// Copy of jsonld-signatures.expansionMap
+// since it's not exposed by the package
+// Description: Disallows dropping properties when expanding by default
+const strictExpansionMap = (info) => {
+  if (info.unmappedProperty) {
+    throw new Error(
+      'The property "' +
+        info.unmappedProperty +
+        '" in the input ' +
+        "was not defined in the context."
+    );
+  }
+};
 
 function sha256(string, encoding) {
   const md = forge.md.sha256.create();
