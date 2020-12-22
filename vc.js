@@ -83,6 +83,7 @@ async function sign(healthCertFile, { issuer, digitalpenId, ...credentials }) {
 
     const vcStrOut = JSON.stringify(vc, null, 2);
     fs.writeFileSync(healthCertFile, vcStrOut);
+    console.log("Signed");
   } catch (err) {
     throw err;
   }
