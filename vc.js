@@ -49,7 +49,7 @@ async function addPractitioner(healthCertFile, { ...practitionerData }) {
 }
 
 async function sign(healthCertFile, { issuer, digitalpenId, ...credentials }) {
-  const vcStrIn = await fs.readFile(healthCertFile);
+  const vcStrIn = fs.readFileSync(healthCertFile);
   const vc = JSON.parse(vcStrIn);
   if (vc.proof) {
     throw new Error('Health certificate has been already signed');
@@ -63,7 +63,7 @@ async function sign(healthCertFile, { issuer, digitalpenId, ...credentials }) {
   if (digitalpenId) {
     serialNbr = digitalpenId;
   } else {
-    const certPem = await fs.readFile(issuer).toString();
+    const certPem = fs.readFileSync(issuer).toString();
     const cert = parseCertificatePem(certPem);
     serialNbr = getCertificateSerialNbr(cert);
   }
@@ -83,14 +83,15 @@ async function sign(healthCertFile, { issuer, digitalpenId, ...credentials }) {
     vc.proof = proofFromResponse(signResponse.proof);
 
     const vcStrOut = JSON.stringify(vc, null, 2);
-    await fs.writeFile(healthCertFile, vcStrOut);
+    fs.writeFileSync(healthCertFile, vcStrOut);
+    console.log('Signed');
   } catch (err) {
     throw err;
   }
 }
 
 async function validate(healthCertFile, credentials) {
-  const vcStrIn = await fs.readFile(healthCertFile);
+  const vcStrIn = fs.readFileSync(healthCertFile);
   const vc = JSON.parse(vcStrIn);
   if (!vc.proof) {
     throw new Error('Health certificate has not been signed');
