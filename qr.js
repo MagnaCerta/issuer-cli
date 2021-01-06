@@ -2,7 +2,7 @@ const fs = require('fs');
 const { callService } = require('./client');
 
 async function encode(vc, { outfile, ...credentials }) {
-  const vcStrIn = await fs.readFile(vc);
+  const vcStrIn = fs.readFileSync(vc);
   const vcJson = JSON.parse(vcStrIn);
   const payload = JSON.stringify(vcJson);
   // console.log("LEN", payload.length);
@@ -28,7 +28,7 @@ async function encode(vc, { outfile, ...credentials }) {
       ''
     );
     const imgDataBuff = Buffer.from(imgDataBase64, 'base64');
-    await fs.writeFile(outfile, imgDataBuff);
+    fs.writeFileSync(outfile, imgDataBuff);
   } catch (err) {
     throw err;
   }
