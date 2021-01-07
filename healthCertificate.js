@@ -18,7 +18,7 @@ function newHealthCertificate({ type, status, lotNumber, result }) {
     throw new Error(`Type must be one of {${Object.keys(vcTypes)}}`);
   }
 
-  vc.credentialSubject.id = uuid.v4();
+  vc.id = uuid.v4();
 
   if (type === 'Immunization') {
     vc.credentialSubject.resourceType = type;

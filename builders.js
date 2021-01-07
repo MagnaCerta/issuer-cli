@@ -56,12 +56,12 @@ function buildSignCSRRequest(csr_pem, org_id, expiresInDays) {
 }
 
 async function buildIssuecertaRequest(vc, serialNumber) {
-  const certa_id = vc.credentialSubject.id;
+  const certa_id = vc.id;
   const credentialDigest = await createCredentialDigest(vc, customLoader);
   const digest = Buffer.from(credentialDigest).toString('base64');
 
   if (!certa_id) {
-    throw 'Invalid document.credentialSubject.id';
+    throw 'Invalid document.id';
   }
 
   const built = {
@@ -75,14 +75,14 @@ async function buildIssuecertaRequest(vc, serialNumber) {
 }
 
 async function buildVerifycertaRequest(vc) {
-  const certa_id = vc.credentialSubject.id;
+  const certa_id = vc.id;
   const proof = proof2Request(vc.proof);
   delete vc.proof;
   const credentialDigest = await createCredentialDigest(vc, customLoader);
   const digest = Buffer.from(credentialDigest).toString('base64');
 
   if (!certa_id) {
-    throw 'Invalid document.credentialSubject.id';
+    throw 'Invalid document.id';
   }
 
   const built = {
