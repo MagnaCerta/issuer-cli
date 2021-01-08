@@ -11,19 +11,14 @@ async function createCredentialDigest(
     compactToRelative = false
   } = {}
 ) {
-  // Step 1. Expand-and-compact
-  const doc = await jsonld.compact(document, ctx, {
-    documentLoader,
-    expansionMap,
-    compactToRelative
-  });
-  // Step 2:
-  const canonized = await canonizeCredential(doc, {
+  const canonized = await canonizeCredential(document, {
     documentLoader,
     expansionMap
   });
 
-  return sha256(canonized);
+  const digest = sha256(canonized);
+
+  return digest;
 }
 
 // Copy of jsonld-signatures.suites.LinkedDataSignature.canonize(),
