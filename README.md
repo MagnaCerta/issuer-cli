@@ -43,6 +43,7 @@ creates a ECDSA key pair and stores public key as `${keyName}.pem`.
 
 3. Create Health certificate (VC: Verifiable credential)
 
+If you already have a VC to be signed, skip to step 3.4
 
 3.1. Create Immunization certificate
 

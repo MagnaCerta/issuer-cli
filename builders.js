@@ -1,14 +1,14 @@
-const { createCredentialDigest } = require("./digest");
-const { customLoader } = require("./documentloaders");
-const { PARENT_ORG_ID } = require("./constants");
+const { createCredentialDigest } = require('./digest');
+const { customLoader } = require('./documentloaders');
+const { PARENT_ORG_ID } = require('./constants');
 
 function buildCreateKeyRequest(org_id) {
   return {
     algorithm: {
       algorithm: 2, // ECDSA
       options: {
-        Curve: "SECP256R1",
-        Hash: "SHA256"
+        Curve: 'SECP256R1',
+        Hash: 'SHA256'
       }
     },
     org_id
@@ -32,9 +32,10 @@ function buildCreateCSRRequest(
 }
 
 function buildSignCSRRequest(csr_pem, org_id, expiresInDays) {
-  expiresInDays = parseInt(expiresInDays || "30");
+  const expiresInDaysInt = parseInt(expiresInDays || '30', 10);
   const expirationDate = new Date();
-  expirationDate.setDate(expirationDate.getDate() + expiresInDays); // 30-day validity
+  expirationDate.setDate(expirationDate.getDate() + expiresInDaysInt); // 30-day validity
+
   return {
     csr_pem,
     org_id,
@@ -55,12 +56,12 @@ function buildSignCSRRequest(csr_pem, org_id, expiresInDays) {
 }
 
 async function buildIssuecertaRequest(vc, serialNumber) {
-  const certa_id = vc.credentialSubject.id;
+  const certa_id = vc.id;
   const credentialDigest = await createCredentialDigest(vc, customLoader);
-  const digest = Buffer.from(credentialDigest).toString("base64");
+  const digest = Buffer.from(credentialDigest).toString('base64');
 
   if (!certa_id) {
-    throw "Invalid document.credentialSubject.id";
+    throw 'Invalid document.id';
   }
 
   const built = {
@@ -74,14 +75,14 @@ async function buildIssuecertaRequest(vc, serialNumber) {
 }
 
 async function buildVerifycertaRequest(vc) {
-  const certa_id = vc.credentialSubject.id;
+  const certa_id = vc.id;
   const proof = proof2Request(vc.proof);
   delete vc.proof;
   const credentialDigest = await createCredentialDigest(vc, customLoader);
-  const digest = Buffer.from(credentialDigest).toString("base64");
+  const digest = Buffer.from(credentialDigest).toString('base64');
 
   if (!certa_id) {
-    throw "Invalid document.credentialSubject.id";
+    throw 'Invalid document.id';
   }
 
   const built = {
