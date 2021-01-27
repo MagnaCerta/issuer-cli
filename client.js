@@ -32,7 +32,6 @@ async function callService(path, request, credentials) {
     if (token || (username && password)) {
       const authToken = token || (await getToken(username, password));
       requestOpts.headers = { Authorization: "Bearer " + authToken };
-      // console.log(requestOpts);
     }
   }
 

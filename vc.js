@@ -71,7 +71,6 @@ async function sign(healthCertFile, { issuer, digitalpenId, ...credentials }) {
 
   // Do not modify vc beyond this point, otherwise its digest will be different when trying to verify
   const signRequest = await buildIssuecertaRequest(vc, serialNbr);
-  // console.log("Request", signRequest);
 
   try {
     const signResponse = await callService(
@@ -96,7 +95,6 @@ async function validate(healthCertFile, credentials) {
   }
 
   const verifyRequest = await buildVerifycertaRequest(vc);
-  // console.log("Request", verifyRequest);
 
   try {
     const verifyResponse = await callService(

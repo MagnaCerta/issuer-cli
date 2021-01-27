@@ -52,8 +52,8 @@ function newHealthCertificate({ type, status, lotNumber, result }) {
     vc.credentialSubject.specimen = [
       {
         type: "Specimen",
-        reference: "#specimen1",
-      },
+        reference: "#specimen1"
+      }
     ];
     // Observation
     addResult_(vc.credentialSubject, result);
@@ -83,21 +83,21 @@ function addResult_(doc, resultStr) {
         {
           system: "https://www.questd.com/codes",
           code: "AZD1222",
-          display: "serology results",
-        },
+          display: "serology results"
+        }
       ],
-      text: "serology results",
+      text: "serology results"
     },
     valueString: resultStr,
-    comment: resultComment[resultStr],
+    comment: resultComment[resultStr]
   };
   doc.contained = doc.contained || [];
   doc.contained.push(observation);
   doc.result = [
     {
       type: "Observation",
-      reference: "#r1",
-    },
+      reference: "#r1"
+    }
   ];
 }
 
@@ -123,7 +123,7 @@ function addPatientData(
     } else {
       const newSubjectInfoExt = {
         url: SUBJECT_INFO_URL,
-        extension: [],
+        extension: []
       };
       subjectExts.push(newSubjectInfoExt);
       subjectInfo = newSubjectInfoExt.extension;
@@ -137,8 +137,8 @@ function addPatientData(
         url: SUBJECT_NAME_INFO_URL,
         valueHumanName: {
           family: [familyName],
-          given: [givenName],
-        },
+          given: [givenName]
+        }
       });
     } else if (familyName || givenName) {
       throw "familyName and givenName are expected to be set simultaneously";
@@ -154,7 +154,7 @@ function addPatientData(
       } else {
         subjectInfo.push({
           url: SUBJECT_PHOTO_URL,
-          valuePhoto: patientPhotos,
+          valuePhoto: patientPhotos
         });
       }
     }
@@ -172,7 +172,7 @@ function addPatientData(
       resourceType: "Patient",
       id: "p1",
       name: [{ family: familyName, given: [givenName] }],
-      photo: patientPhotos,
+      photo: patientPhotos
     };
     if (gender) {
       patient.gender = gender;
@@ -197,7 +197,7 @@ function addPatient_(doc, patient) {
 
   // Patient -- DiagnosticReport
   else if (doc.resourceType == "DiagnosticReport") {
-    doct.subject = patientRef;
+    doc.subject = patientRef;
     const specimen = getById(doc.contained, "specimen1");
     if (!specimen) {
       throw new Error(
@@ -223,7 +223,7 @@ function addPractitionerData(vc, { givenName, familyName, prefix }) {
   const practitioner = {
     resourceType: "Practitioner",
     id: "Dr.1",
-    name: [practitionerName],
+    name: [practitionerName]
   };
 
   const doc = vc.type.includes("FHIRCredential")
@@ -264,7 +264,7 @@ const resultComment = {
 const immunizationCertificate = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
-    "https://digitalinclusionfoundation.org/Immunization/v1",
+    "https://digitalinclusionfoundation.org/Immunization/v1"
   ],
   type: ["VerifiableCredential", "Immunization"],
   credentialSubject: {
@@ -272,28 +272,28 @@ const immunizationCertificate = {
       {
         resourceType: "Organization",
         id: "manufacturer1",
-        name: "AstraZeneca; The University of Oxford; IQVIA",
+        name: "AstraZeneca; The University of Oxford; IQVIA"
       },
       {
         resourceType: "Location",
         id: "address1",
-        address: { city: "Houston", state: "TX", country: "US" },
-      },
+        address: { city: "Houston", state: "TX", country: "US" }
+      }
     ],
     vaccineCode: {
       coding: [{ system: "urn:oid:1.2.36.1.20011005.17", code: "COVID-19" }],
-      text: "Covid-19 (Coronavirus SARS-CoV-2)",
+      text: "Covid-19 (Coronavirus SARS-CoV-2)"
     },
     primarySource: true,
     manufacturer: { type: "Organization", reference: "#manfacturer1" },
-    location: { type: "Location", reference: "#address1" },
-  },
+    location: { type: "Location", reference: "#address1" }
+  }
 };
 
 const diagnosticReport = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
-    "https://digitalinclusionfoundation.org/DiagnosticReport/v1",
+    "https://digitalinclusionfoundation.org/DiagnosticReport/v1"
   ],
   type: ["VerifiableCredential", "DiagnosticReport"],
   credentialSubject: {
@@ -306,29 +306,29 @@ const diagnosticReport = {
           {
             city: "MEDFORD",
             state: "NJ",
-            country: "US",
-          },
-        ],
-      },
+            country: "US"
+          }
+        ]
+      }
     ],
     code: {
       coding: [
         {
           system: "https://www.questd.com/codes",
           code: "AZD1222",
-          display: "SARS-CoV-2 serology test",
-        },
+          display: "SARS-CoV-2 serology test"
+        }
       ],
-      text: "SARS-CoV-2 serology test",
-    },
-  },
+      text: "SARS-CoV-2 serology test"
+    }
+  }
 };
 
 const fhirCredential = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
     "https://schema.opencerta.org/proof",
-    "https://schema.opencerta.org/fhir/202009",
+    "https://schema.opencerta.org/fhir/202009"
   ],
   type: ["VerifiableCredential", "FHIRCredential"],
   credentialSubject: {
@@ -341,7 +341,7 @@ const fhirCredential = {
       id: "566092",
       meta: {
         // lastUpdated,: "2020-09-23T19:29:13.162-04:00",
-        versionId: "1",
+        versionId: "1"
       },
       contained: [
         // {
@@ -354,18 +354,18 @@ const fhirCredential = {
         coding: [
           {
             code: "LAB",
-            system: "http://hl7.org/fhir/DiagnosticReport-category",
-          },
-        ],
+            system: "http://hl7.org/fhir/DiagnosticReport-category"
+          }
+        ]
       },
       code: {
         coding: [
           {
             code: "94500-6",
             display: "SARS-COV-2, NAA",
-            system: "http://loinc.org",
-          },
-        ],
+            system: "http://loinc.org"
+          }
+        ]
       },
       // effectiveDateTime: "2020-07-14T23:10:45-06:00",
       // issued: "2020-07-14T23:10:45-06:00",
@@ -401,38 +401,38 @@ const fhirCredential = {
                   "http://commonpass.org/fhir/StructureDefinition/subject-identifier-info",
                 valueIdentifier: {
                   assigner: {
-                    display: "UK",
+                    display: "UK"
                   },
                   period: {
-                    end: "2023-01-14",
+                    end: "2023-01-14"
                   },
                   type: {
                     coding: [
                       {
                         code: "PPN",
                         display: "Passport Number",
-                        system: "http://hl7.org/fhir/v2/0203",
-                      },
-                    ],
+                        system: "http://hl7.org/fhir/v2/0203"
+                      }
+                    ]
                   },
-                  value: "9872349875987",
-                },
-              },
-            ],
-          },
+                  value: "9872349875987"
+                }
+              }
+            ]
+          }
         ],
         // display: "Lab A Patient",,
-        reference: "Patient/566092",
+        reference: "Patient/566092"
       },
-      resourceType: "DiagnosticReport",
-    },
-  },
+      resourceType: "DiagnosticReport"
+    }
+  }
 };
 
 const vcTypes = {
   Immunization: immunizationCertificate,
   DiagnosticReport: diagnosticReport,
-  FHIRCredential: fhirCredential,
+  FHIRCredential: fhirCredential
 };
 
 module.exports = { newHealthCertificate, addPatientData, addPractitionerData };
